@@ -1,0 +1,22 @@
+[project]
+name = "d2-sync-report"
+version = "0.1.0"
+description = "A DHIS2 sync status reporter CLI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["tyro"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+d2-sync-report = "d2_sync_report.cli:main"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
