@@ -1,3 +1,7 @@
+A CLI tool to generate reports from DHIS2 scheduled sync jobs. Supports:
+
+    * Event Programs Data Sync
+
 # Setup
 
 ```shell
@@ -15,7 +19,3 @@ python -m d2_sync_report.cli --input-file sample.txt --verbose
 pip install -e .
 d2-sync-report --input-file sample.txt --verbose
 ```
-
-A CLI tool to generate reports from DHIS2 scheduled sync jobs. Supports:
-
-- 	Event Programs Data Sync
