@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from tyro import cli
+import tyro
+
+from d2_sync_report.data.repositories.user_d2_repository import UserD2Repository
+from d2_sync_report.domain.entities.instance import Auth, Instance
 from d2_sync_report.domain.usecases.send_sync_report_usecase import (
     SendSyncReportUseCase,
 )
@@ -13,18 +16,26 @@ from d2_sync_report.data.repositories.scheduled_sync_report_d2_repository import
 class Args:
     url: str
     auth: str
+    send_user_group: str
     logs_folder_path: str
+    skip_message: bool = False
 
 
 def main() -> None:
-    args = cli(Args)
+    args = tyro.cli(Args)
 
-    use_case = SendSyncReportUseCase(
+    (username, password) = args.auth.split(":", 1)
+    instance = Instance(url=args.url, auth=Auth(username, password))
+    print(args)
+
+    SendSyncReportUseCase(
         ScheduledSyncReportD2Repository(args.logs_folder_path),
-        MessageD2Repository("http://localhost:8080"),
+        UserD2Repository(instance),
+        MessageD2Repository(instance),
+    ).execute(
+        user_group_name_to_send=args.send_user_group,
+        skip_message=args.skip_message,
     )
-    reports = use_case.execute()
-    print(reports)
 
 
 if __name__ == "__main__":

@@ -6,3 +6,5 @@ build/
 *.egg-info/
 venv
 *.code-workspace
+tests/logs/
+/*.sh

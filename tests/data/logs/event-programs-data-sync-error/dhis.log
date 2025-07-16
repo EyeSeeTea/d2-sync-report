@@ -1,0 +1,46 @@
+* INFO  2025-07-16T13:22:18,069 Scheduler initiated execution of job: JobConfiguration{uid='bEr758Y0ngT', name='Event Programs Data Sync', jobType=EVENT_PROGRAMS_DATA_SYNC, cronExpression='0 15 * ? * *', delay='null', jobParameters=org.hisp.dhis.scheduling.parameters.EventProgramsDataSynchronizationJobParameters@59665b31, enabled=true, inMemoryJob=false, lastRuntimeExecution='00:00:00.339', userUid='null', leaderOnlyJob=false, jobStatus=SCHEDULED, nextExecutionTime=null, lastExecutedStatus=COMPLETED, lastExecuted=2025-07-16 13:20:23.157} (DefaultSchedulingManager.java [http-nio-8080-exec-9])
+* INFO  2025-07-16T13:22:18,074 Checking for an open Hibernate session (DbmsUtils.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,074 No open session found, caught HibernateException Could not obtain transaction-synchronized Session for current thread, opening new Hibernate session now (DbmsUtils.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,075 Starting Event programs data synchronization job. (NotificationLoggerUtil.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,075 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Process started: Starting Event programs data synchronization job. (ControlledJobProgress.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,188 Status: [Available: true, message: Authentication was successful, HTTP status: 200 OK] (SyncUtils.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,188 Counting anonymous events ready to be synchronised. (NotificationLoggerUtil.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,188 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage started: Counting anonymous events ready to be synchronised. (ControlledJobProgress.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,188 CurrentUser is null, before performing EVENT_PROGRAMS_DATA_SYNC, the remote sync user will be injected (EventSynchronization.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,211 Events last changed before Thu Jan 01 01:00:00 CET 1970 will not be synchronized. (NotificationLoggerUtil.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,211 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage completed after 0.023s: Events last changed before Thu Jan 01 01:00:00 CET 1970 will not be synchronized. (ControlledJobProgress.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,211 2 anonymous Events to synchronize were found.
+Remote server URL for Event programs POST synchronization: http://192.168.128.1:7000/api/events?strategy=SYNC
+Event programs data synchronization job has 1 pages to synchronize. With page size: 50 (NotificationLoggerUtil.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,211 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage started: 2 anonymous Events to synchronize were found.
+Remote server URL for Event programs POST synchronization: http://192.168.128.1:7000/api/events?strategy=SYNC
+Event programs data synchronization job has 1 pages to synchronize. With page size: 50 (ControlledJobProgress.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,522 Sync summary: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='Program is not assigned to this Organisation Unit: WA5iEXjqCnS', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='ZOkh9BeNXYF', href='null'}, ImportSummary{status=SUCCESS, description='Deletion of event zCziVRiuiHG was successful', importCount=[imports=0, updates=0, ignores=0], conflicts={}, dataSetComplete='null', reference='zCziVRiuiHG', href='null'}]} (SyncUtils.java [taskScheduler-19])
+* ERROR 2025-07-16T13:22:18,522 Sync against endpoint: EVENTS failed: ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='Program is not assigned to this Organisation Unit: WA5iEXjqCnS', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='ZOkh9BeNXYF', href='null'}, ImportSummary{status=SUCCESS, description='Deletion of event zCziVRiuiHG was successful', importCount=[imports=0, updates=0, ignores=0], conflicts={}, dataSetComplete='null', reference='zCziVRiuiHG', href='null'}]} |########| Top ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='Program is not assigned to this Organisation Unit: WA5iEXjqCnS', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='ZOkh9BeNXYF', href='null'}, ImportSummary{status=ERROR, description='Deletion of event zCziVRiuiHG failed', importCount=[imports=0, updates=0, ignores=1], conflicts={Attribute.value:Non-unique attribute value 'Ar011R' for attribute QPFgav8YHVb=ImportConflict{error:Attribute.value, message:Non-unique attribute value 'Ar011R' for attribute QPFgav8YHVb}}, dataSetComplete='null', reference='zCziVRiuiHG', href='null'}]} (SyncUtils.java [taskScheduler-19])
+* ERROR 2025-07-16T13:22:18,522 Page 1 synchronisation failed. (NotificationLoggerUtil.java [taskScheduler-19])
+* ERROR 2025-07-16T13:22:18,522 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Item failed after 0.311s: Page 1 synchronisation failed. (ControlledJobProgress.java [taskScheduler-19])
+org.hisp.dhis.dxf2.metadata.sync.exception.MetadataSyncServiceException: Page 1 synchronisation failed.
+	at org.hisp.dhis.dxf2.sync.EventSynchronization.synchronizePage(EventSynchronization.java:242) ~[dhis-service-dxf2-2.40.4.1.jar:?]
+	at org.hisp.dhis.dxf2.sync.EventSynchronization.lambda$runSyncWithPaging$3(EventSynchronization.java:219) ~[dhis-service-dxf2-2.40.4.1.jar:?]
+	at org.hisp.dhis.scheduling.JobProgress.lambda$runStage$3(JobProgress.java:282) ~[dhis-api-2.40.4.1.jar:?]
+	at org.hisp.dhis.scheduling.JobProgress.runStage(JobProgress.java:325) ~[dhis-api-2.40.4.1.jar:?]
+	at org.hisp.dhis.scheduling.JobProgress.runStage(JobProgress.java:277) ~[dhis-api-2.40.4.1.jar:?]
+	at org.hisp.dhis.scheduling.JobProgress.runStage(JobProgress.java:252) ~[dhis-api-2.40.4.1.jar:?]
+	at org.hisp.dhis.dxf2.sync.EventSynchronization.runSyncWithPaging(EventSynchronization.java:216) ~[dhis-service-dxf2-2.40.4.1.jar:?]
+	at org.hisp.dhis.dxf2.sync.EventSynchronization.synchronizeData(EventSynchronization.java:129) ~[dhis-service-dxf2-2.40.4.1.jar:?]
+	at org.hisp.dhis.dxf2.sync.EventProgramsDataSynchronizationJob.execute(EventProgramsDataSynchronizationJob.java:63) ~[dhis-service-dxf2-2.40.4.1.jar:?]
+	at org.hisp.dhis.scheduling.AbstractSchedulingManager.execute(AbstractSchedulingManager.java:295) ~[dhis-service-core-2.40.4.1.jar:?]
+	at org.hisp.dhis.scheduling.DefaultSchedulingManager.lambda$executeNow$6(DefaultSchedulingManager.java:201) ~[dhis-service-core-2.40.4.1.jar:?]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source) [?:?]
+	at java.base/java.util.concurrent.FutureTask.run(Unknown Source) [?:?]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) [spring-context-5.3.37.jar:5.3.37]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source) [?:?]
+	at java.base/java.util.concurrent.FutureTask.run(Unknown Source) [?:?]
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source) [?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) [?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) [?:?]
+	at java.base/java.lang.Thread.run(Unknown Source) [?:?]
+* INFO  2025-07-16T13:22:18,530 0 successful and 1 failed items (NotificationLoggerUtil.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,530 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage completed after 0.319s: 0 successful and 1 failed items (ControlledJobProgress.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,530 SUCCESS! Event programs data sync was successfully done! It took  (NotificationLoggerUtil.java [taskScheduler-19])
+* INFO  2025-07-16T13:22:18,530 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Process completed after 0.455s: SUCCESS! Event programs data sync was successfully done! It took  (ControlledJobProgress.java [taskScheduler-19])

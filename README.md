@@ -2,20 +2,20 @@ A CLI tool to generate reports from DHIS2 scheduled sync jobs. Supports:
 
     * Event Programs Data Sync
 
-# Setup
+## Install
 
 ```shell
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate
+# Development
+$ hatch run test
+$ hatch run run [...options]
 
-# Install dependencies
-pip install -r requirements.txt
+# Install and use
+$ pip install -e .
+$ d2-sync-report [...OPTIONS...]
+```
 
-# Run the CLI (development)
-python -m d2_sync_report.cli --input-file sample.txt --verbose
+## Usage
 
-# OR, install as a CLI script and use it anywhere
-pip install -e .
-d2-sync-report --input-file sample.txt --verbose
+```shell
+$ d2-sync-report
 ```

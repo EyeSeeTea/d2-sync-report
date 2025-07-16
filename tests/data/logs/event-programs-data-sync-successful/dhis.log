@@ -1,0 +1,23 @@
+* INFO  2025-07-16T09:04:50,253 Scheduler initiated execution of job: JobConfiguration{uid='bEr758Y0ngT', name='Event Programs Data Sync', jobType=EVENT_PROGRAMS_DATA_SYNC, cronExpression='0 15 * ? * *', delay='null', jobParameters=org.hisp.dhis.scheduling.parameters.EventProgramsDataSynchronizationJobParameters@3a7e84cf, enabled=true, inMemoryJob=false, lastRuntimeExecution='00:00:00.332', userUid='null', leaderOnlyJob=false, jobStatus=DISABLED, nextExecutionTime=null, lastExecutedStatus=COMPLETED, lastExecuted=2025-05-12 09:15:00.003} (DefaultSchedulingManager.java [http-nio-8080-exec-1])
+* INFO  2025-07-16T09:04:50,330 Checking for an open Hibernate session (DbmsUtils.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,330 No open session found, caught HibernateException Could not obtain transaction-synchronized Session for current thread, opening new Hibernate session now (DbmsUtils.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,331 Starting Event programs data synchronization job. (NotificationLoggerUtil.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,331 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Process started: Starting Event programs data synchronization job. (ControlledJobProgress.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,486 Status: [Available: true, message: Authentication was successful, HTTP status: 200 OK] (SyncUtils.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,487 Counting anonymous events ready to be synchronised. (NotificationLoggerUtil.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,487 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage started: Counting anonymous events ready to be synchronised. (ControlledJobProgress.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,488 CurrentUser is null, before performing EVENT_PROGRAMS_DATA_SYNC, the remote sync user will be injected (EventSynchronization.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,553 Events last changed before Thu Jan 01 01:00:00 CET 1970 will not be synchronized. (NotificationLoggerUtil.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,554 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage completed after 0.066s: Events last changed before Thu Jan 01 01:00:00 CET 1970 will not be synchronized. (ControlledJobProgress.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,557 1 anonymous Events to synchronize were found.
+Remote server URL for Event programs POST synchronization: http://192.168.128.1:7000/api/events?strategy=SYNC
+Event programs data synchronization job has 1 pages to synchronize. With page size: 50 (NotificationLoggerUtil.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,557 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage started: 1 anonymous Events to synchronize were found.
+Remote server URL for Event programs POST synchronization: http://192.168.128.1:7000/api/events?strategy=SYNC
+Event programs data synchronization job has 1 pages to synchronize. With page size: 50 (ControlledJobProgress.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,893 Sync summary: ImportSummaries{importSummaries=[ImportSummary{status=SUCCESS, description='null', importCount=[imports=1, updates=0, ignores=0], conflicts={}, dataSetComplete='null', reference='zCziVRiuiHG', href='http://192.168.128.1:7000/api/events/zCziVRiuiHG'}]} (SyncUtils.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,894 The lastSynchronized flag of these Events will be updated: [zCziVRiuiHG] (EventSynchronization.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,910 1 successful and 0 failed items (NotificationLoggerUtil.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,911 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Stage completed after 0.354s: 1 successful and 0 failed items (ControlledJobProgress.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,911 SUCCESS! Event programs data sync was successfully done! It took  (NotificationLoggerUtil.java [taskScheduler-18])
+* INFO  2025-07-16T09:04:50,911 [EVENT_PROGRAMS_DATA_SYNC bEr758Y0ngT] Process completed after 0.58s: SUCCESS! Event programs data sync was successfully done! It took  (ControlledJobProgress.java [taskScheduler-18])
