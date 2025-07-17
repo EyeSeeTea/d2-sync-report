@@ -106,28 +106,38 @@ class ScheduledSyncReportD2Repository(ScheduledSyncReportRepository):
 
         if matcher.matches("Starting Event programs data synchronization"):
             return matcher.set_start_sync_job(type="eventProgramsData")
+        elif not state.current or state.current.type != "eventProgramsData":
+            return state
         elif matcher.matches("Event programs data synchronization failed"):
             return matcher.close_sync_job(success=False)
         elif matcher.matches("Event programs data synchronization skipped"):
             return matcher.close_sync_job(success=True)
         elif matcher.matches("Event programs data sync was successfully done"):
             return matcher.close_sync_job(success=True)
-        else:
+        elif state.current and state.current.type == "eventProgramsData":
             return matcher.parse_import_summaries()
+        else:
+            return state
 
     def _tracker_programs_reducer(self, state: State, log_entry: LogEntry) -> State:
         matcher = LogEntryReducer(state, log_entry)
 
         if matcher.matches("Starting Tracker programs data synchronization"):
             return matcher.set_start_sync_job(type="trackerProgramsData")
+        elif not state.current or state.current.type != "trackerProgramsData":
+            return state
         elif matcher.matches("Tracker programs data synchronization failed"):
             return matcher.close_sync_job(success=False)
         elif matcher.matches("Tracker programs data synchronization skipped"):
             return matcher.close_sync_job(success=True)
-        elif matcher.matches("Tracker programs data sync was successfully done"):
+        elif matcher.matches(
+            "Tracker programs data synchronization was successfully done"
+        ):
             return matcher.close_sync_job(success=True)
-        else:
+        elif state.current and state.current.type == "trackerProgramsData":
             return matcher.parse_import_summaries()
+        else:
+            return state
 
     def _get_log_entry(self, line: str) -> Optional[LogEntry]:
         # "* INFO 2025-07-16T09:04:50,123 Some message"
@@ -315,7 +325,6 @@ class LogEntryReducer:
     def parse_import_summaries(self):
         state = self.state
         log_entry = self.log_entry
-
         summaries = parse_import_summaries(log_entry.text)
 
         errors = [
@@ -323,8 +332,5 @@ class LogEntryReducer:
             for summary in summaries
             if summary.status == "ERROR" or summary.conflicts
         ]
-
-        if not state.current:
-            return state
 
         return state.add_errors(errors)

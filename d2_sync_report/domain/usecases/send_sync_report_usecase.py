@@ -60,14 +60,15 @@ class SendSyncReportUseCase:
             f"Status: {"SUCCESS" if report.success else "ERROR"}",
             f"Start: {format_datetime(report.start)}",
             f"End: {format_datetime(report.end)}",
-            (
-                f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}"
-                if report.errors
-                else None
-            ),
         ]
 
-        return "\n".join(compact(parts))
+        errors = (
+            f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}"
+            if report.errors
+            else ""
+        )
+
+        return " | ".join(compact(parts)) + errors
 
 
 def compact(xs: list[str | None]) -> list[str]:

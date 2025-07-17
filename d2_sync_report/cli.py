@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, replace
 import tyro
 
 from d2_sync_report.data.repositories.user_d2_repository import UserD2Repository
@@ -27,7 +28,11 @@ def main() -> None:
 
     (username, password) = args.auth.split(":", 1)
     instance = Instance(url=args.url, auth=Auth(username, password))
-    print(args)
+    args_to_log = replace(
+        args,
+        auth=re.sub(r"[^:]", "*", args.auth),
+    )
+    print(args_to_log)
 
     SendSyncReportUseCase(
         ScheduledSyncReportD2Repository(args.logs_folder_path, args.ignore_cache),
