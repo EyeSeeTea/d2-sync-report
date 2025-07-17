@@ -19,6 +19,7 @@ class Args:
     send_user_group: str
     logs_folder_path: str
     skip_message: bool = False
+    ignore_cache: bool = False
 
 
 def main() -> None:
@@ -29,7 +30,7 @@ def main() -> None:
     print(args)
 
     SendSyncReportUseCase(
-        ScheduledSyncReportD2Repository(args.logs_folder_path),
+        ScheduledSyncReportD2Repository(args.logs_folder_path, args.ignore_cache),
         UserD2Repository(instance),
         MessageD2Repository(instance),
     ).execute(

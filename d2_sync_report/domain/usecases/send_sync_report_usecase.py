@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List, Optional
 
 from d2_sync_report.domain.entities.message import Message
 from d2_sync_report.domain.entities.scheduled_sync_report import (
@@ -24,7 +25,9 @@ class SendSyncReportUseCase:
         self.message_repository: MessageRepository = message_repository
 
     def execute(
-        self, user_group_name_to_send: str, skip_message: bool
+        self,
+        user_group_name_to_send: str,
+        skip_message: bool,
     ) -> ScheduledSyncReport:
         users = self.user_repository.get_list_by_group(name=user_group_name_to_send)
         user_emails = [user.email for user in users]
@@ -33,8 +36,10 @@ class SendSyncReportUseCase:
         reports = self.scheduled_sync_report.get_logs()
         contents = "\n\n".join(self._format_report(report) for report in reports.items)
 
-        if skip_message:
-            print("Skipping sending message.")
+        if not reports.items:
+            print("No reports found. Skip sending message")
+        elif skip_message:
+            print("Flag --skip-message is set. Skip sending message. Contents:\n")
             print(contents)
         else:
             message = Message(
@@ -49,15 +54,25 @@ class SendSyncReportUseCase:
 
     def _format_report(self, report: ScheduledSyncReportItem) -> str:
         indent = " " * 2
-        return "\n".join(
-            [
-                f"Type: {report.type}",
-                f"Status: {"SUCCESS" if report.success else "ERROR"}",
-                f"Start: {format_datetime(report.start)}",
-                f"End: {format_datetime(report.end)}",
-                f"Errors:\n{indent}{f"\n{indent}".join(report.errors) if report.errors else 'NONE'}",
-            ]
-        )
+
+        parts: List[Optional[str]] = [
+            f"Type: {report.type}",
+            f"Status: {"SUCCESS" if report.success else "ERROR"}",
+            f"Start: {format_datetime(report.start)}",
+            f"End: {format_datetime(report.end)}",
+            (
+                f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}"
+                if report.errors
+                else None
+            ),
+        ]
+
+        return "\n".join(compact(parts))
+
+
+def compact(xs: list[str | None]) -> list[str]:
+    """Remove None values from the list."""
+    return [x for x in xs if x is not None]
 
 
 def format_datetime(dt: datetime) -> str:

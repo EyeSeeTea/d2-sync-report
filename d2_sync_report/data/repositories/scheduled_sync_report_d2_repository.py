@@ -1,13 +1,15 @@
-from itertools import dropwhile
+from __future__ import annotations
+import itertools
 import os
 import re
-from typing import Iterator, List, Literal, Optional, Set, TypeVar, Union
+from typing import Iterator, List, Literal, Optional, Set, Tuple, TypeVar, Union
 from datetime import datetime
 from dataclasses import dataclass, replace
 from functools import reduce
 from pydantic import BaseModel
 
 from d2_sync_report.domain.entities.scheduled_sync_report import (
+    ReportType,
     ScheduledSyncReport,
     ScheduledSyncReportItem,
 )
@@ -36,92 +38,99 @@ class InProgress:
 class State:
     current: Union[InProgress, None]
     parsed_jobs: List[ScheduledSyncReportItem]
+    last_processed_timestamp: Optional[datetime]
+
+    @staticmethod
+    def initial() -> State:
+        return State(current=None, parsed_jobs=[], last_processed_timestamp=None)
+
+    def add_errors(self, errors: List[str]) -> State:
+        if not self.current:
+            return self
+
+        return replace(
+            self, current=replace(self.current, errors=self.current.errors + errors)
+        )
 
 
 class ScheduledSyncReportD2Repository(ScheduledSyncReportRepository):
-    def __init__(self, logs_folder_path: str):
+    def __init__(self, logs_folder_path: str, ignore_cache: bool):
         self.logs_folder_path = logs_folder_path
+        self.ignore_cache = ignore_cache
 
     def get_logs(self) -> ScheduledSyncReport:
         logs_file_path = os.path.join(self.logs_folder_path, "dhis.log")
-        cache = Cache().load()
+        cache = Cache()
+        now = datetime.now()
 
-        with open(logs_file_path, "r", encoding="utf-8") as f:
-            lines = (line.rstrip() for line in f)
+        print(f"Reading logs from: {logs_file_path}")
+        with open(logs_file_path, "r", encoding="utf-8") as file:
+            lines = (line.rstrip() for line in file)
 
-            all_log_entries: Iterator[LogEntry] = (
-                entry for line in lines if (entry := self._parse_line(line)) is not None
+            all_log_entries = (
+                log_entry
+                for line in lines
+                if (log_entry := self._get_log_entry(line)) is not None
             )
 
-            log_entries = dropwhile(
-                lambda entry: cache and entry.timestamp < cache.last_processed,
+            cache_value = cache.load() if not self.ignore_cache else None
+
+            if cache_value and cache_value.last_processed:
+                print(f"Parse logs since: {cache_value.last_processed}")
+
+            log_entries = itertools.dropwhile(
+                lambda log_entry: cache_value
+                and log_entry.timestamp <= cache_value.last_processed,
                 all_log_entries,
             )
-            items = self._parse(log_entries)
+
+            (items, last_processed) = self.get_log_report_items(log_entries)
+            if last_processed:
+                cache.save(CacheProps(last_processed=last_processed, last_sync=now))
 
             return ScheduledSyncReport(items=items)
 
-    def _parse(self, log_entries: Iterator[LogEntry]) -> List[ScheduledSyncReportItem]:
-        initial_state = State(current=None, parsed_jobs=[])
+    def get_log_report_items(
+        self, log_entries: Iterator[LogEntry]
+    ) -> Tuple[List[ScheduledSyncReportItem], Optional[datetime]]:
+        def composed_reducer(state: State, entry: LogEntry):
+            state2 = self._event_programs_reducer(state, entry)
+            state3 = self._tracker_programs_reducer(state2, entry)
+            return state3
 
-        def reducer(state: State, log_entry: LogEntry) -> State:
-            if not log_entry:
-                return state
+        final_state = reduce(composed_reducer, log_entries, State.initial())
+        return (final_state.parsed_jobs, final_state.last_processed_timestamp)
 
-            def matches(pattern: str) -> bool:
-                return pattern in log_entry.text
+    def _event_programs_reducer(self, state: State, log_entry: LogEntry) -> State:
+        matcher = LogEntryReducer(state, log_entry)
 
-            def close_event_programs_data_sync(success: bool) -> State:
-                if not state.current:
-                    return state
+        if matcher.matches("Starting Event programs data synchronization"):
+            return matcher.set_start_sync_job(type="eventProgramsData")
+        elif matcher.matches("Event programs data synchronization failed"):
+            return matcher.close_sync_job(success=False)
+        elif matcher.matches("Event programs data synchronization skipped"):
+            return matcher.close_sync_job(success=True)
+        elif matcher.matches("Event programs data sync was successfully done"):
+            return matcher.close_sync_job(success=True)
+        else:
+            return matcher.parse_import_summaries()
 
-                parsed = ScheduledSyncReportItem(
-                    type=state.current.type,
-                    success=success and not state.current.errors,
-                    errors=uniq(state.current.errors),
-                    start=state.current.start,
-                    end=log_entry.timestamp or state.current.start,
-                )
+    def _tracker_programs_reducer(self, state: State, log_entry: LogEntry) -> State:
+        matcher = LogEntryReducer(state, log_entry)
 
-                return State(current=None, parsed_jobs=state.parsed_jobs + [parsed])
+        if matcher.matches("Starting Tracker programs data synchronization"):
+            return matcher.set_start_sync_job(type="trackerProgramsData")
+        elif matcher.matches("Tracker programs data synchronization failed"):
+            return matcher.close_sync_job(success=False)
+        elif matcher.matches("Tracker programs data synchronization skipped"):
+            return matcher.close_sync_job(success=True)
+        elif matcher.matches("Tracker programs data sync was successfully done"):
+            return matcher.close_sync_job(success=True)
+        else:
+            return matcher.parse_import_summaries()
 
-            if matches("Process started: Starting Event programs data synchronization"):
-                return State(
-                    current=InProgress(
-                        type="eventProgramsData", start=log_entry.timestamp, errors=[]
-                    ),
-                    parsed_jobs=state.parsed_jobs,
-                )
-
-            elif matches("Event programs data synchronization failed"):
-                return close_event_programs_data_sync(success=False)
-
-            elif matches("Event programs data synchronization skipped") or matches(
-                "Event programs data sync was successfully done"
-            ):
-                return close_event_programs_data_sync(success=True)
-
-            else:
-                summaries = parse_import_summaries(log_entry.text)
-                errors = [
-                    summary.format_summary()
-                    for summary in summaries
-                    if summary.status == "ERROR" or summary.conflicts
-                ]
-
-                if not state.current:
-                    return state
-
-                return replace(
-                    state,
-                    current=replace(
-                        state.current, errors=state.current.errors + errors
-                    ),
-                )
-
-        return reduce(reducer, log_entries, initial_state).parsed_jobs
-
-    def _parse_line(self, line: str) -> Optional[LogEntry]:
+    def _get_log_entry(self, line: str) -> Optional[LogEntry]:
+        # "* INFO 2025-07-16T09:04:50,123 Some message"
         if not line.startswith("*"):
             return None
         parts = line.split()
@@ -129,10 +138,9 @@ class ScheduledSyncReportD2Repository(ScheduledSyncReportRepository):
             error(f"Cannot parse: {line}")
             return None
 
-        timestamp_str = parts[2].split(",")[0]
-        timestamp: Optional[datetime] = None
+        timestamp_str = parts[2]
         try:
-            timestamp = datetime.fromisoformat(timestamp_str)
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S,%f")
         except ValueError:
             error(f"Invalid timestamp: {line}")
             return None
@@ -235,7 +243,7 @@ class Cache:
         cache_path = self._get_cache_path()
 
         with open(cache_path, "w", encoding="utf-8") as f:
-            f.write(props.model_dump_json(indent=2))
+            f.write(props.model_dump_json(indent=4) + "\n")
         print(f"Cache saved: {cache_path}")
 
     def load(self) -> Optional[CacheProps]:
@@ -245,9 +253,11 @@ class Cache:
             print(f"Cache loaded: {cache_path}")
 
             try:
-                return CacheProps.model_validate_json(
+                cache_props = CacheProps.model_validate_json(
                     open(cache_path, "r", encoding="utf-8").read()
                 )
+                print(f"Cache: {cache_props}")
+                return cache_props
             except ValueError as exc:
                 print(f"Cache load error: {exc}")
                 # File is corrupted, remove it
@@ -255,8 +265,66 @@ class Cache:
                 return None
 
         else:
+            print(f"Cache file does not exist: {cache_path}")
             return None
 
     def _get_cache_path(self) -> str:
         script_folder = os.path.dirname(os.path.dirname(__file__))
         return os.path.join(script_folder, "cache.json")
+
+
+class LogEntryReducer:
+    def __init__(self, state: State, log_entry: LogEntry):
+        self.state = state
+        self.log_entry = log_entry
+
+    def matches(self, pattern: str) -> bool:
+        return pattern in self.log_entry.text
+
+    def close_sync_job(self, success: bool) -> State:
+        state = self.state
+        log_entry = self.log_entry
+
+        if not state.current:
+            return state
+
+        parsed = ScheduledSyncReportItem(
+            type=state.current.type,
+            success=success and not state.current.errors,
+            errors=uniq(state.current.errors),
+            start=state.current.start,
+            end=log_entry.timestamp or state.current.start,
+        )
+
+        return State(
+            current=None,
+            parsed_jobs=state.parsed_jobs + [parsed],
+            last_processed_timestamp=log_entry.timestamp,
+        )
+
+    def set_start_sync_job(self, type: ReportType) -> State:
+        state = self.state
+        log_entry = self.log_entry
+
+        return State(
+            current=InProgress(type=type, start=log_entry.timestamp, errors=[]),
+            parsed_jobs=state.parsed_jobs,
+            last_processed_timestamp=None,
+        )
+
+    def parse_import_summaries(self):
+        state = self.state
+        log_entry = self.log_entry
+
+        summaries = parse_import_summaries(log_entry.text)
+
+        errors = [
+            summary.format_summary()
+            for summary in summaries
+            if summary.status == "ERROR" or summary.conflicts
+        ]
+
+        if not state.current:
+            return state
+
+        return state.add_errors(errors)

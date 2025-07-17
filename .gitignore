@@ -8,3 +8,4 @@ venv
 *.code-workspace
 tests/logs/
 /*.sh
+cache.json  
