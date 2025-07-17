@@ -48,9 +48,7 @@ class State:
         if not self.current:
             return self
 
-        return replace(
-            self, current=replace(self.current, errors=self.current.errors + errors)
-        )
+        return replace(self, current=replace(self.current, errors=self.current.errors + errors))
 
 
 class ScheduledSyncReportD2Repository(ScheduledSyncReportRepository):
@@ -68,9 +66,7 @@ class ScheduledSyncReportD2Repository(ScheduledSyncReportRepository):
             lines = (line.rstrip() for line in file)
 
             all_log_entries = (
-                log_entry
-                for line in lines
-                if (log_entry := self._get_log_entry(line)) is not None
+                log_entry for line in lines if (log_entry := self._get_log_entry(line)) is not None
             )
 
             cache_value = cache.load() if not self.ignore_cache else None
@@ -79,8 +75,7 @@ class ScheduledSyncReportD2Repository(ScheduledSyncReportRepository):
                 print(f"Parse logs since: {cache_value.last_processed}")
 
             log_entries = itertools.dropwhile(
-                lambda log_entry: cache_value
-                and log_entry.timestamp <= cache_value.last_processed,
+                lambda log_entry: cache_value and log_entry.timestamp <= cache_value.last_processed,
                 all_log_entries,
             )
 
@@ -130,9 +125,7 @@ class ScheduledSyncReportD2Repository(ScheduledSyncReportRepository):
             return matcher.close_sync_job(success=False)
         elif matcher.matches("Tracker programs data synchronization skipped"):
             return matcher.close_sync_job(success=True)
-        elif matcher.matches(
-            "Tracker programs data synchronization was successfully done"
-        ):
+        elif matcher.matches("Tracker programs data synchronization was successfully done"):
             return matcher.close_sync_job(success=True)
         elif state.current and state.current.type == "trackerProgramsData":
             return matcher.parse_import_summaries()
@@ -191,9 +184,7 @@ class ImportSummary:
 
         message_parts: List[str] = (
             [summary.description]
-            if summary.status != "SUCCESS"
-            and summary.description
-            and summary.description != "null"
+            if summary.status != "SUCCESS" and summary.description and summary.description != "null"
             else []
         ) + ([summary.conflicts] if summary.conflicts else [])
 

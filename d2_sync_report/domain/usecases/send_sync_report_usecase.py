@@ -62,11 +62,7 @@ class SendSyncReportUseCase:
             f"End: {format_datetime(report.end)}",
         ]
 
-        errors = (
-            f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}"
-            if report.errors
-            else ""
-        )
+        errors = f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}" if report.errors else ""
 
         return " | ".join(compact(parts)) + errors
 

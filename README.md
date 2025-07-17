@@ -1,7 +1,9 @@
-A CLI tool to generate reports from DHIS2 scheduled sync jobs. Supports:
+A CLI tool to generate reports from DHIS2 scheduled sync job logs. Currently, it supports jobs of type:
 
-- Event Programs Data Sync
-- Tracker Programs Data Sync
+-   Event Programs Data Sync
+-   Tracker Programs Data Sync
+
+Requirements: Python 3.8+
 
 ## Install
 
@@ -16,19 +18,21 @@ $ $HOME/.local/bin/d2-sync-report # add folder to the PATH
 
 ```shell
 $ d2-sync-report --help
-usage: d2-sync-report [-h] [OPTIONS]
+usage: cli.py [-h] [OPTIONS]
 
-╭─ options ───────────────────────────────────────────────╮
-│ -h, --help              show this help message and exit │
-│ --url STR               (required)                      │
-│ --auth STR              (required)                      │
-│ --send-user-group STR   (required)                      │
-│ --logs-folder-path STR  (required)                      │
-│ --skip-message, --no-skip-message                       │
-│                         (default: False)                │
-│ --ignore-cache, --no-ignore-cache                       │
-│                         (default: False)                │
-╰─────────────────────────────────────────────────────────╯
+╭─ options ────────────────────────────────────────────────╮
+│ -h, --help         show this help message and exit       │
+│ --url URL          DHIS2 instance base URL (required)    │
+│ --auth AUTH        Basic auth (user:pass) (required)     │
+│ --send-user-group GROUP_ID                               │
+│                    User group UID (required)             │
+│ --logs-folder-path PATH                                  │
+│                    Folder containing dhis.log (required) │
+│ --skip-message, --no-skip-message                        │
+│                    Skip sending message (default: False) │
+│ --ignore-cache, --no-ignore-cache                        │
+│                    Ignore cached state (default: False)  │
+╰──────────────────────────────────────────────────────────╯
 ```
 
 Example:

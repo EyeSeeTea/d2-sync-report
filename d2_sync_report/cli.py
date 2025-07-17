@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass, replace
+from typing import Annotated
 import tyro
 
 from d2_sync_report.data.repositories.user_d2_repository import UserD2Repository
@@ -13,14 +14,17 @@ from d2_sync_report.data.repositories.scheduled_sync_report_d2_repository import
 )
 
 
+arg = tyro.conf.arg
+
+
 @dataclass
 class Args:
-    url: str
-    auth: str
-    send_user_group: str
-    logs_folder_path: str
-    skip_message: bool = False
-    ignore_cache: bool = False
+    url: Annotated[str, arg(help="DHIS2 instance base URL", metavar="URL")]
+    auth: Annotated[str, arg(help="Basic auth (user:pass)", metavar="AUTH")]
+    send_user_group: Annotated[str, arg(help="User group UID", metavar="GROUP_ID")]
+    logs_folder_path: Annotated[str, arg(help="Folder containing dhis.log", metavar="PATH")]
+    skip_message: Annotated[bool, arg(help="Skip sending message", default=False)] = False
+    ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
 
 
 def main() -> None:
