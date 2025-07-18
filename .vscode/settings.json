@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.defaultInterpreterPath": "venv/bin/python",
+  "python.analysis.typeCheckingMode": "strict",
+  "python.linting.mypyEnabled": true,
+  "python.linting.enabled": true
+}

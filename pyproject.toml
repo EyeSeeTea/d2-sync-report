@@ -1,0 +1,42 @@
+[project]
+name = "d2-sync-report"
+version = "0.1.0"
+description = "A DHIS2 sync status reporter CLI"
+authors = [{ name = "EyeSeeTea", email = "hello@eyeseetea.com" }]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+  "pydantic",
+  "requests",
+  "tyro",
+]
+
+[project.optional-dependencies]
+dev = [
+  "black",
+  "pylint",
+  "mypy",
+  "pytest"
+]
+
+[project.scripts]
+d2-sync-report = "d2_sync_report.cli:main"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.hatch.envs.default]
+features = ["dev"]
+
+[tool.hatch.envs.default.scripts]
+cli = "python -m d2_sync_report.cli {args}"
+lint = "black d2_sync_report tests {args}"
+test = "pytest {args}"

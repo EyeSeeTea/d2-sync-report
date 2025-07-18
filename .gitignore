@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+dist/
+build/
+*.egg-info/
+venv
+*.code-workspace
+tests/logs/
+/*.sh
+cache.json  
