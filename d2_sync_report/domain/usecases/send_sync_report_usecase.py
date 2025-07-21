@@ -63,12 +63,12 @@ class SendSyncReportUseCase:
         ]
 
         errors = (
-            f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}"
+            f"Errors:\n{'\n'.join(f'{indent}{error}' for error in report.errors)}"
             if report.errors
             else ""
         )
 
-        return " | ".join(compact(parts)) + errors
+        return "\n".join(compact(parts)) + "\n" + errors
 
 
 def compact(xs: list[str | None]) -> list[str]:
