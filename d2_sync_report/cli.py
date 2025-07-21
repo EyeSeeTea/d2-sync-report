@@ -3,6 +3,9 @@ from dataclasses import dataclass, replace
 from typing import Annotated
 import tyro
 
+from d2_sync_report.data.repositories.sync_job_report_execution_file_repository import (
+    SyncJobReportExecutionFileRepository,
+)
 from d2_sync_report.data.repositories.user_d2_repository import UserD2Repository
 from d2_sync_report.domain.entities.instance import (
     BasicAuth,
@@ -25,7 +28,7 @@ arg = tyro.conf.arg
 class Args:
     url: Annotated[str, arg(help="DHIS2 instance base URL", metavar="URL")]
     auth: Annotated[str, arg(help="USER:PASS or Personal Access Token (d2pat_...)", metavar="AUTH")]
-    send_user_group: Annotated[str, arg(help="User group UID", metavar="GROUP_ID")]
+    notify_user_group: Annotated[str, arg(help="User group name/code", metavar="GROUP")]
     logs_folder_path: Annotated[str, arg(help="Folder containing dhis.log", metavar="PATH")]
     skip_message: Annotated[bool, arg(help="Skip sending message", default=False)] = False
     ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
@@ -36,12 +39,14 @@ def main() -> None:
     instance = get_instance(args)
 
     SendSyncReportUseCase(
-        SyncJobReportD2Repository(args.logs_folder_path, args.ignore_cache),
+        SyncJobReportExecutionFileRepository(),
+        SyncJobReportD2Repository(args.logs_folder_path),
         UserD2Repository(instance),
         MessageD2Repository(instance),
     ).execute(
-        user_group_name_to_send=args.send_user_group,
+        user_group_name_to_send=args.notify_user_group,
         skip_message=args.skip_message,
+        skip_cache=args.ignore_cache,
     )
 
 

@@ -6,7 +6,11 @@ from d2_sync_report.domain.entities.sync_job_report import (
     SyncJobReport,
     SyncJobReportItem,
 )
+from d2_sync_report.domain.entities.sync_job_report_execution import SyncJobReportExecution
 from d2_sync_report.domain.repositories.message_repository import MessageRepository
+from d2_sync_report.domain.repositories.sync_job_report_execution_repository import (
+    SyncJobReportExecutionRepository,
+)
 from d2_sync_report.domain.repositories.sync_job_report_repository import (
     SyncJobReportRepository,
 )
@@ -14,12 +18,16 @@ from d2_sync_report.domain.repositories.user_repository import UserRepository
 
 
 class SendSyncReportUseCase:
+    message_subject = "DHIS2 Sync Job Report"
+
     def __init__(
         self,
+        sync_job_report_execution_repository: SyncJobReportExecutionRepository,
         sync_job_report_repository: SyncJobReportRepository,
         user_repository: UserRepository,
         message_repository: MessageRepository,
     ):
+        self.sync_job_report_execution_repository = sync_job_report_execution_repository
         self.sync_job_report = sync_job_report_repository
         self.user_repository: UserRepository = user_repository
         self.message_repository: MessageRepository = message_repository
@@ -28,29 +36,59 @@ class SendSyncReportUseCase:
         self,
         user_group_name_to_send: str,
         skip_message: bool,
+        skip_cache: bool,
     ) -> SyncJobReport:
+        now = datetime.now()
+        user_emails = self.get_users_in_group(user_group_name_to_send)
+        since, reports = self.get_reports(skip_cache)
+        contents = self.get_message_contents(now, since, reports)
+
+        if skip_message:
+            print("Flag --skip-message is set. No message is sent. Contents:\n")
+            print(contents)
+        else:
+            message = Message(subject=self.message_subject, text=contents, recipients=user_emails)
+            response = self.message_repository.send(message)
+            print(f"Send email response: {response}")
+            self.save_cache(skip_cache, reports)
+
+        return reports
+
+    def get_message_contents(
+        self, now: datetime, since: Optional[datetime], reports: SyncJobReport
+    ) -> str:
+        formatted_reports = "\n\n".join(self._format_report(report) for report in reports.items)
+
+        if formatted_reports:
+            return formatted_reports
+        else:
+            since_str = since.strftime("%Y-%m-%d %H:%M:%S") if since else "BEGINNING"
+            return f"No sync jobs found ({since_str} -> {now.strftime('%Y-%m-%d %H:%M:%S')})."
+
+    def get_reports(self, skip_cache: bool):
+        since = self.get_since_datetime(skip_cache)
+        print(f"Fetching reports since: {since or '-'}")
+        reports = self.sync_job_report.get(since=since)
+        return since, reports
+
+    def get_users_in_group(self, user_group_name_to_send: str):
         users = self.user_repository.get_list_by_group(name=user_group_name_to_send)
         user_emails = [user.email for user in users]
         print(f"Users in group '{user_group_name_to_send}': {user_emails or 'NONE'}")
+        return user_emails
 
-        reports = self.sync_job_report.get()
-        contents = "\n\n".join(self._format_report(report) for report in reports.items)
+    def get_since_datetime(self, skip_cache: bool) -> Optional[datetime]:
+        last = None if skip_cache else self.sync_job_report_execution_repository.get_last()
+        return last.last_processed if last else None
 
-        if not reports.items:
-            print("No reports found. Skip sending message")
-        elif skip_message:
-            print("Flag --skip-message is set. Skip sending message. Contents:\n")
-            print(contents)
-        else:
-            message = Message(
-                subject="DHIS2 Sync Job Report",
-                text=contents,
-                recipients=user_emails,
+    def save_cache(self, skip_cache: bool, reports: SyncJobReport) -> None:
+        if not skip_cache:
+            self.sync_job_report_execution_repository.save_last(
+                SyncJobReportExecution(
+                    last_processed=reports.last_processed,
+                    last_sync=datetime.now(),
+                )
             )
-            response = self.message_repository.send(message)
-            print(f"Server response: {response}")
-
-        return reports
 
     def _format_report(self, report: SyncJobReportItem) -> str:
         indent = " " * 2

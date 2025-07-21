@@ -25,7 +25,7 @@ usage: cli.py [-h] [OPTIONS]
 │ -h, --help         show this help message and exit       │
 │ --url URL          DHIS2 instance base URL (required)    │
 │ --auth AUTH        Basic auth (user:pass) (required)     │
-│ --send-user-group GROUP_ID                               │
+│ --notify-user-group GROUP_ID                             │
 │                    User group UID (required)             │
 │ --logs-folder-path PATH                                  │
 │                    Folder containing dhis.log (required) │
@@ -42,7 +42,7 @@ Example:
 $ d2-sync-report \
     --url="http://localhost:8080" \
     --auth="USER:PASS" \
-    --send-user-group="System admin" \
+    --notify-user-group="System admin" \
     --logs-folder-path="/path/to/dhis2/config/logs"
 ```
 
