@@ -44,14 +44,14 @@ class SendSyncReportUseCase:
         contents = self.get_message_contents(now, since, reports)
 
         if skip_message:
-            print("Flag --skip-message is set. No message is sent. Contents:\n")
+            print("No message is sent. Contents:\n")
             print(contents)
         else:
             message = Message(subject=self.message_subject, text=contents, recipients=user_emails)
             response = self.message_repository.send(message)
             print(f"Send email response: {response}")
-            self.save_cache(skip_cache, reports)
 
+        self.save_cache(skip_cache, reports)
         return reports
 
     def get_message_contents(
@@ -100,8 +100,11 @@ class SendSyncReportUseCase:
             f"End: {format_datetime(report.end)}",
         ]
 
+        def add_index(msg: str, idx: int) -> str:
+            return indent + f"[{idx + 1}/{len(report.errors)}] {msg}"
+
         errors = (
-            f"Errors:\n{'\n'.join(f'{indent}{error}' for error in report.errors)}"
+            f"Errors:\n{'\n'.join(add_index(error, idx) for (idx, error) in enumerate(report.errors))}"
             if report.errors
             else ""
         )

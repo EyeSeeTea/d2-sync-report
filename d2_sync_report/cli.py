@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass, replace
 from typing import Annotated
 import tyro
+from tyro.conf import arg
 
 from d2_sync_report.data.repositories.sync_job_report_execution_file_repository import (
     SyncJobReportExecutionFileRepository,
@@ -21,15 +22,12 @@ from d2_sync_report.data.repositories.sync_job_report_d2_repository import (
 )
 
 
-arg = tyro.conf.arg
-
-
 @dataclass
 class Args:
     url: Annotated[str, arg(help="DHIS2 instance base URL", metavar="URL")]
-    auth: Annotated[str, arg(help="USER:PASS or Personal Access Token (d2pat_...)", metavar="AUTH")]
+    auth: Annotated[str, arg(help="Basic (USER:PASS) or PAT token (d2pat_xyz)", metavar="AUTH")]
     notify_user_group: Annotated[str, arg(help="User group name/code", metavar="GROUP")]
-    logs_folder_path: Annotated[str, arg(help="Folder containing dhis.log", metavar="PATH")]
+    logs_folder_path: Annotated[str, arg(help="Folder containing dhis.log", metavar="FOLDER_PATH")]
     skip_message: Annotated[bool, arg(help="Skip sending message", default=False)] = False
     ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
 
@@ -51,10 +49,8 @@ def main() -> None:
 
 
 def log_args(args: Args) -> None:
-    args_to_log = replace(
-        args,
-        auth=re.sub(r"[^:]", "*", args.auth),
-    )
+    obfuscated_auth = re.sub(r"[^:]", "*", args.auth)
+    args_to_log = replace(args, auth=obfuscated_auth)
     print(args_to_log)
 
 
@@ -73,7 +69,7 @@ def get_instance(args: Args) -> Instance:
             auth=BasicAuth(type="basic", username=username, password=password),
         )
     else:
-        raise ValueError("Invalid auth format. Use USER:PASS for basic auth or d2pat_... for PAT.")
+        raise ValueError("Invalid auth format")
 
 
 if __name__ == "__main__":

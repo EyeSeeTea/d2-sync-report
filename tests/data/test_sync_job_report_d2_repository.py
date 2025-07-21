@@ -82,6 +82,41 @@ def test_tracker_programs_data_sync_error():
     )
 
 
+## Metadata synchronization
+
+
+def test_metadata_sync_success():
+    repository = get_repo("metadata-synchronization-success")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is True
+    assert len(report.errors) == 0
+
+
+def test_metadata_sync_error():
+    repository = get_repo("metadata-synchronization-error")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is False
+    assert len(report.errors) == 2
+
+    assert (
+        report.errors[0]
+        == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "completedatasetregistration_pkey"'
+    )
+
+    assert (
+        report.errors[1]
+        == 'Caused by: com.fasterxml.jackson.databind.JsonMappingException: No row with the given identifier exists: [org.hisp.dhis.category.CategoryOptionCombo#7452] (through reference chain: org.hisp.dhis.dataset.DataSet["sections"]->org.hibernate.collection.internal.PersistentSet[3]->org.hisp.dhis.dataset.Section["greyedFields"])'
+    )
+
+
 ## Helpers
 
 
@@ -94,10 +129,10 @@ def assert_datetime_equals(actual: datetime, expected: datetime):
     assert actual.replace(microsecond=0) == expected
 
 
-def get_test_log_path(filename: str) -> str:
-    return os.path.join(os.path.dirname(__file__), "logs", filename)
+def get_log_folder(folder: str) -> str:
+    return os.path.join(os.path.dirname(__file__), "logs", folder)
 
 
 def get_repo(logs_folder_path: str):
-    log_path = get_test_log_path(logs_folder_path)
+    log_path = get_log_folder(logs_folder_path)
     return SyncJobReportD2Repository(logs_folder_path=log_path)

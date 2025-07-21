@@ -8,7 +8,7 @@ Requirements: Python 3.8+
 ## Install
 
 ```shell
-$ sudo apt install pipx # For Debian/Ubuntu, adapt for other distributions
+$ sudo apt install pipx # For Debian/Ubuntu,
 $ pipx install hatch
 $ pipx install -e .
 $ pipx ensurepath # adds local BIN folder to the PATH
@@ -19,7 +19,7 @@ $ d2-sync-report
 
 ```shell
 $ d2-sync-report --help
-usage: cli.py [-h] [OPTIONS]
+usage: d2-sync-report [-h] [OPTIONS]
 
 ╭─ options ────────────────────────────────────────────────╮
 │ -h, --help         show this help message and exit       │

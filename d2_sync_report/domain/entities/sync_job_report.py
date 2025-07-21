@@ -3,12 +3,12 @@ from typing import Literal, List
 from datetime import datetime
 
 
-ReportType = Literal["eventProgramsData", "trackerProgramsData", "metadata"]
+SyncJobType = Literal["eventProgramsData", "trackerProgramsData", "metadata"]
 
 
 @dataclass
 class SyncJobReportItem:
-    type: ReportType
+    type: SyncJobType
     success: bool
     start: datetime
     end: datetime
