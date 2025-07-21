@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import List, Optional
 
 from d2_sync_report.domain.entities.message import Message
-from d2_sync_report.domain.entities.scheduled_sync_report import (
-    ScheduledSyncReport,
-    ScheduledSyncReportItem,
+from d2_sync_report.domain.entities.sync_job_report import (
+    SyncJobReport,
+    SyncJobReportItem,
 )
 from d2_sync_report.domain.repositories.message_repository import MessageRepository
-from d2_sync_report.domain.repositories.scheduled_sync_report_repository import (
-    ScheduledSyncReportRepository,
+from d2_sync_report.domain.repositories.sync_job_report_repository import (
+    SyncJobReportRepository,
 )
 from d2_sync_report.domain.repositories.user_repository import UserRepository
 
@@ -16,11 +16,11 @@ from d2_sync_report.domain.repositories.user_repository import UserRepository
 class SendSyncReportUseCase:
     def __init__(
         self,
-        scheduled_sync_report_repository: ScheduledSyncReportRepository,
+        sync_job_report_repository: SyncJobReportRepository,
         user_repository: UserRepository,
         message_repository: MessageRepository,
     ):
-        self.scheduled_sync_report = scheduled_sync_report_repository
+        self.sync_job_report = sync_job_report_repository
         self.user_repository: UserRepository = user_repository
         self.message_repository: MessageRepository = message_repository
 
@@ -28,12 +28,12 @@ class SendSyncReportUseCase:
         self,
         user_group_name_to_send: str,
         skip_message: bool,
-    ) -> ScheduledSyncReport:
+    ) -> SyncJobReport:
         users = self.user_repository.get_list_by_group(name=user_group_name_to_send)
         user_emails = [user.email for user in users]
         print(f"Users in group '{user_group_name_to_send}': {user_emails or 'NONE'}")
 
-        reports = self.scheduled_sync_report.get_logs()
+        reports = self.sync_job_report.get()
         contents = "\n\n".join(self._format_report(report) for report in reports.items)
 
         if not reports.items:
@@ -43,7 +43,7 @@ class SendSyncReportUseCase:
             print(contents)
         else:
             message = Message(
-                subject="Scheduled Sync Report",
+                subject="DHIS2 Sync Job Report",
                 text=contents,
                 recipients=user_emails,
             )
@@ -52,7 +52,7 @@ class SendSyncReportUseCase:
 
         return reports
 
-    def _format_report(self, report: ScheduledSyncReportItem) -> str:
+    def _format_report(self, report: SyncJobReportItem) -> str:
         indent = " " * 2
 
         parts: List[Optional[str]] = [
@@ -62,7 +62,11 @@ class SendSyncReportUseCase:
             f"End: {format_datetime(report.end)}",
         ]
 
-        errors = f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}" if report.errors else ""
+        errors = (
+            f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}"
+            if report.errors
+            else ""
+        )
 
         return " | ".join(compact(parts)) + errors
 

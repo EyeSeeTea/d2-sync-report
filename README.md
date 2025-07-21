@@ -1,17 +1,18 @@
 A CLI tool to generate reports from DHIS2 scheduled sync job logs. Currently, it supports jobs of type:
 
--   Event Programs Data Sync
--   Tracker Programs Data Sync
+- Event Programs Data Sync
+- Tracker Programs Data Sync
 
 Requirements: Python 3.8+
 
 ## Install
 
 ```shell
-$ sudo apt install pipx
+$ sudo apt install pipx # For Debian/Ubuntu, adapt for other distributions
 $ pipx install hatch
 $ pipx install -e .
-$ $HOME/.local/bin/d2-sync-report # add folder to the PATH
+$ pipx ensurepath # adds local BIN folder to the PATH
+$ d2-sync-report
 ```
 
 ## Usage

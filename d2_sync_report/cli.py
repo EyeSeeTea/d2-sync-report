@@ -9,8 +9,8 @@ from d2_sync_report.domain.usecases.send_sync_report_usecase import (
     SendSyncReportUseCase,
 )
 from d2_sync_report.data.repositories.message_d2_repository import MessageD2Repository
-from d2_sync_report.data.repositories.scheduled_sync_report_d2_repository import (
-    ScheduledSyncReportD2Repository,
+from d2_sync_report.data.repositories.sync_job_report_d2_repository import (
+    SyncJobReportD2Repository,
 )
 
 
@@ -22,9 +22,15 @@ class Args:
     url: Annotated[str, arg(help="DHIS2 instance base URL", metavar="URL")]
     auth: Annotated[str, arg(help="Basic auth (user:pass)", metavar="AUTH")]
     send_user_group: Annotated[str, arg(help="User group UID", metavar="GROUP_ID")]
-    logs_folder_path: Annotated[str, arg(help="Folder containing dhis.log", metavar="PATH")]
-    skip_message: Annotated[bool, arg(help="Skip sending message", default=False)] = False
-    ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
+    logs_folder_path: Annotated[
+        str, arg(help="Folder containing dhis.log", metavar="PATH")
+    ]
+    skip_message: Annotated[bool, arg(help="Skip sending message", default=False)] = (
+        False
+    )
+    ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = (
+        False
+    )
 
 
 def main() -> None:
@@ -39,7 +45,7 @@ def main() -> None:
     print(args_to_log)
 
     SendSyncReportUseCase(
-        ScheduledSyncReportD2Repository(args.logs_folder_path, args.ignore_cache),
+        SyncJobReportD2Repository(args.logs_folder_path, args.ignore_cache),
         UserD2Repository(instance),
         MessageD2Repository(instance),
     ).execute(
