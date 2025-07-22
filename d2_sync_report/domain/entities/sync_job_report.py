@@ -1,9 +1,14 @@
 from dataclasses import dataclass
-from typing import Literal, List
+from enum import Enum
+from typing import List
 from datetime import datetime
 
 
-SyncJobType = Literal["aggregatedData", "eventProgramsData", "trackerProgramsData", "metadata"]
+class SyncJobType(str, Enum):
+    AGGREGATED = "aggregatedData"
+    EVENT_PROGRAMS = "eventProgramsData"
+    TRACKER_PROGRAMS = "trackerProgramsData"
+    METADATA = "metadata"
 
 
 @dataclass

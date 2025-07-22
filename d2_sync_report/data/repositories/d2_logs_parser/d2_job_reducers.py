@@ -13,7 +13,7 @@ class D2JobReducers:
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="DATA_SYNC")
-        type = "aggregatedData"
+        type = SyncJobType.AGGREGATED
 
         if matcher.matches("Starting DataValueSynchronization job", section=True):
             return matcher.set_start_sync_job(type=type)
@@ -34,7 +34,7 @@ class D2JobReducers:
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="EVENT_PROGRAMS_DATA_SYNC")
-        type = "eventProgramsData"
+        type = SyncJobType.EVENT_PROGRAMS
 
         if matcher.matches("Starting Event programs data synchronization", section=True):
             return matcher.set_start_sync_job(type=type)
@@ -57,7 +57,7 @@ class D2JobReducers:
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="TRACKER_PROGRAMS_DATA_SYNC")
-        type = "trackerProgramsData"
+        type = SyncJobType.TRACKER_PROGRAMS
 
         if matcher.matches("Starting Tracker programs data synchronization", section=True):
             return matcher.set_start_sync_job(type=type)
@@ -82,7 +82,7 @@ class D2JobReducers:
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="META_DATA_SYNC")
-        type = "metadata"
+        type = SyncJobType.METADATA
 
         if matcher.matches("Metadata Sync cron Job started", section=False):
             return matcher.set_start_sync_job(type=type)

@@ -5,6 +5,7 @@ from d2_sync_report.domain.entities.message import Message
 from d2_sync_report.domain.entities.sync_job_report import (
     SyncJobReport,
     SyncJobReportItem,
+    SyncJobType,
 )
 from d2_sync_report.domain.entities.sync_job_report_execution import SyncJobReportExecution
 from d2_sync_report.domain.repositories.message_repository import MessageRepository
@@ -95,7 +96,7 @@ class SendSyncReportUseCase:
         indent = " " * 2
 
         parts: List[Optional[str]] = [
-            f"Type: {report.type}",
+            f"Type: {report_type_names[report.type]}",
             f"Status: {"SUCCESS" if report.success else "ERROR"}",
             f"Start: {format_datetime(report.start)}",
             f"End: {format_datetime(report.end)}",
@@ -111,6 +112,14 @@ class SendSyncReportUseCase:
         )
 
         return "\n".join(compact(parts)) + "\n" + errors
+
+
+report_type_names: dict[SyncJobType, str] = {
+    SyncJobType.AGGREGATED: "Data synchronization",
+    SyncJobType.EVENT_PROGRAMS: "Event programs data sync",
+    SyncJobType.TRACKER_PROGRAMS: "Tracker programs data sync",
+    SyncJobType.METADATA: "Metadata synchronization",
+}
 
 
 def compact(xs: list[str | None]) -> list[str]:
