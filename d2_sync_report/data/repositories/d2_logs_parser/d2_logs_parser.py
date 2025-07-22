@@ -8,6 +8,7 @@ from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
     SyncJobParserState,
 )
 from d2_sync_report.domain.entities.sync_job_report import SyncJobReport, SyncJobReportItem
+import re
 
 """
 This class parses the DHIS2 logs to extract synchronization job reports.
@@ -28,15 +29,31 @@ class D2LogsParser:
         self.logs_folder_path = logs_folder_path
 
     def get(self, since: Optional[datetime] = None) -> SyncJobReport:
-        logs_file_path = os.path.join(self.logs_folder_path, "dhis.log")
-        print(f"Reading logs from: {logs_file_path}")
+        log_files = self._get_log_files()
+        print(f"Reading logs from: {", ".join(log_files)}")
 
         def get_log_entries() -> Iterator[LogEntry]:
-            return self._get_log_entries(logs_file_path, since)
+            for log_file in log_files:
+                yield from self._get_log_entries(log_file, since)
 
         (items, last_processed) = self._get_log_report_items(get_log_entries)
 
         return SyncJobReport(items=items, last_processed=last_processed or datetime.now())
+
+    def _get_log_files(self) -> list[str]:
+        rotated_log_files = [
+            filename
+            for filename in os.listdir(self.logs_folder_path)
+            if re.match(r"dhis\.log\.\d+$", filename)
+        ]
+
+        all_log_files = sorted(
+            rotated_log_files,
+            key=lambda filename: int(filename[len("dhis.log.") :]),
+            reverse=True,
+        ) + ["dhis.log"]
+
+        return [os.path.join(self.logs_folder_path, log_file) for log_file in all_log_files]
 
     def _get_log_entries(
         self, logs_file_path: str, since: Optional[datetime] = None
