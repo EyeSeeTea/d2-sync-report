@@ -34,8 +34,7 @@ class SendSyncReportUseCase:
 
     def execute(
         self,
-        user_group_name_to_send: str,
-        skip_message: bool,
+        user_group_name_to_send: Optional[str],
         skip_cache: bool,
     ) -> SyncJobReport:
         now = datetime.now()
@@ -43,7 +42,7 @@ class SendSyncReportUseCase:
         since, reports = self.get_reports(skip_cache)
         contents = self.get_message_contents(now, since, reports)
 
-        if skip_message:
+        if not user_emails:
             print("No message is sent. Contents:\n")
             print(contents)
         else:
@@ -71,10 +70,12 @@ class SendSyncReportUseCase:
         reports = self.sync_job_report.get(since=since)
         return since, reports
 
-    def get_users_in_group(self, user_group_name_to_send: str):
-        users = self.user_repository.get_list_by_group(name=user_group_name_to_send)
+    def get_users_in_group(self, user_group_to_send: Optional[str]) -> Optional[List[str]]:
+        if not user_group_to_send:
+            return None
+        users = self.user_repository.get_list_by_group(name=user_group_to_send)
         user_emails = [user.email for user in users]
-        print(f"Users in group '{user_group_name_to_send}': {user_emails or 'NONE'}")
+        print(f"Users in group '{user_group_to_send}': {user_emails or 'NONE'}")
         return user_emails
 
     def get_since_datetime(self, skip_cache: bool) -> Optional[datetime]:
