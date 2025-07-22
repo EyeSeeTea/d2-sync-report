@@ -1,5 +1,5 @@
-from d2_sync_report.data.repositories.import_summaries import parse_import_summaries
-from d2_sync_report.data.repositories.job_reducer_types import (
+from d2_sync_report.data.repositories.d2_logs_parser.import_summaries import parse_import_summaries
+from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
     SyncJobParserInProgress,
     LogEntry,
     SyncJobParserState,

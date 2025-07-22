@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 
-from d2_sync_report.data.repositories.d2_logs_parser import D2LogsParser
+from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
 from d2_sync_report.domain.entities.sync_job_report import (
     SyncJobReport,
 )

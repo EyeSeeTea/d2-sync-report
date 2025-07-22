@@ -1,9 +1,7 @@
 import os
 from datetime import datetime
 
-from d2_sync_report.data.repositories.sync_job_report_d2_repository import (
-    SyncJobReportD2Repository,
-)
+from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
 
 
 def test_event_programs_data_sync_success():
@@ -135,4 +133,4 @@ def get_log_folder(folder: str) -> str:
 
 def get_repo(logs_folder_path: str):
     log_path = get_log_folder(logs_folder_path)
-    return SyncJobReportD2Repository(logs_folder_path=log_path)
+    return D2LogsParser(logs_folder_path=log_path)

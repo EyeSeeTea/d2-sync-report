@@ -2,8 +2,11 @@ import os
 from datetime import datetime
 from functools import reduce
 from typing import Callable, Iterator, List, Optional, Tuple
-from d2_sync_report.data.repositories.d2_job_reducers import D2JobReducers
-from d2_sync_report.data.repositories.job_reducer_types import LogEntry, SyncJobParserState
+from d2_sync_report.data.repositories.d2_logs_parser.d2_job_reducers import D2JobReducers
+from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
+    LogEntry,
+    SyncJobParserState,
+)
 from d2_sync_report.domain.entities.sync_job_report import SyncJobReport, SyncJobReportItem
 
 """
