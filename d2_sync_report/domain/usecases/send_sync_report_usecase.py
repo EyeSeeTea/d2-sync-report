@@ -44,7 +44,7 @@ class SendSyncReportUseCase:
         contents = self.get_message_contents(now, since, reports)
 
         if not user_emails:
-            print("No message is sent. Contents:\n")
+            print("No message sent:\n")
             print(contents)
         else:
             message = Message(subject=self.message_subject, text=contents, recipients=user_emails)

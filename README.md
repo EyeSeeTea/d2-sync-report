@@ -7,17 +7,20 @@ Supported job types:
 - Tracker Programs Data Sync
 - Metadata synchronization
 
+The script can access logs stored either on the local filesystem or inside Docker containers.
+
 Requirements: Python 3.8+
 
 ## Install
 
-Using pipx:
+User installation (no root permissions required):
 
 ```shell
-$ sudo apt install pipx # For Debian/Ubuntu,
-$ pipx install hatch
-$ pipx install -e .
-$ pipx ensurepath  # Adds pipx's bin directory to PATH. Restart shell for changes to take effect.
+$ python3 -m venv .venv
+$ .venv/bin/pip install --upgrade pip
+$ .venv/bin/pip install hatch
+$ .venv/bin/pip install -e .
+$ .venv/bin/d2-sync-report
 ```
 
 ## Usage
@@ -28,7 +31,7 @@ usage: d2-sync-report [-h] [OPTIONS]
 
 ╭─ options ───────────────────────────────────────────────────────╮
 │ -h, --help         show this help message and exit              │
-│ --logs-folder-path FOLDER_PATH                                  │
+│ --logs-folder-path [DOCKER_CONTAINER:]FOLDER_PATH               │
 │                    Folder containing dhis.log (required)        │
 │ --ignore-cache, --no-ignore-cache                               │
 │                    Ignore cached state (default: False)         │
@@ -41,26 +44,33 @@ usage: d2-sync-report [-h] [OPTIONS]
 
 Examples:
 
-Process logs and show report in screen:
+Process local logs and show the report on the screen:
 
 ```shell
 $ d2-sync-report \
     --logs-folder-path="/path/to/dhis2/config/logs"
 ```
 
-Process logs and send the report to users in the "System admin" group on the specified DHIS2 instance:
+Process logs stored in a Docker container (use format `CONTAINER_NAME:LOGS_FOLDER_PATH`) and display the report on the screen:
+
+```shell
+$ d2-sync-report \
+    --logs-folder-path="dhis2web-test-two-test:/opt/dhis2/config/local/logs"
+```
+
+Process local logs and send the report to every user in the "System admin" user group for the specified DHIS2 instance:
 
 ```shell
 $ d2-sync-report \
     --logs-folder-path="/path/to/dhis2/config/logs" \
     --url="http://localhost:8080" \
-    --auth="admin:district" \
+    --auth="d2pat_12345" \
     --notify-user-group="System admin"
 ```
 
 ## Development
 
 ```shell
-$ hatch run cli
-$ hatch run test
+$ .venv/bin/hatch run cli
+$ .venv/bin/hatch run test
 ```

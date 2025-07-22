@@ -24,7 +24,10 @@ from d2_sync_report.data.repositories.sync_job_report_d2_repository import (
 
 @dataclass
 class Args:
-    logs_folder_path: Annotated[str, arg(help="Folder containing dhis.log", metavar="FOLDER_PATH")]
+    logs_folder_path: Annotated[
+        str,
+        arg(help="Folder containing file dhis.log", metavar="[DOCKER_CONTAINER:]FOLDER_PATH"),
+    ]
     ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
     url: Annotated[Optional[str], arg(help="DHIS2 instance base URL", metavar="URL")] = None
     auth: Annotated[Optional[str], arg(help="USER:PASS or PAT token", metavar="AUTH")] = None
