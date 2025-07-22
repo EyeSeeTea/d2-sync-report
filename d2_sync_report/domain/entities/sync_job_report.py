@@ -3,7 +3,7 @@ from typing import Literal, List
 from datetime import datetime
 
 
-SyncJobType = Literal["eventProgramsData", "trackerProgramsData", "metadata"]
+SyncJobType = Literal["aggregatedData", "eventProgramsData", "trackerProgramsData", "metadata"]
 
 
 @dataclass

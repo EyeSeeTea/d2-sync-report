@@ -3,9 +3,25 @@ from datetime import datetime
 
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
 
+## Aggregated data synchronization
+
+
+def test_aggregated_data_sync_success():
+    repository = get_repo(folder="data-synchronization-success")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "aggregatedData"
+    assert report.success is True
+    assert len(report.errors) == 0
+
+
+## Event programs data
+
 
 def test_event_programs_data_sync_success():
-    repository = get_repo("event-programs-data-sync-success")
+    repository = get_repo(folder="event-programs-data-sync-success")
     reports = repository.get().items
 
     assert len(reports) == 1
@@ -18,7 +34,7 @@ def test_event_programs_data_sync_success():
 
 
 def test_event_programs_data_sync_error():
-    repository = get_repo("event-programs-data-sync-error")
+    repository = get_repo(folder="event-programs-data-sync-error")
     reports = repository.get().items
 
     assert len(reports) == 1
@@ -46,11 +62,11 @@ def test_event_programs_data_sync_error():
     )
 
 
-## Tracker programs
+## Tracker programs data
 
 
 def test_tracker_programs_data_sync_success():
-    repository = get_repo("tracker-programs-data-sync-success")
+    repository = get_repo(folder="tracker-programs-data-sync-success")
     reports = repository.get().items
 
     assert len(reports) == 1
@@ -61,7 +77,7 @@ def test_tracker_programs_data_sync_success():
 
 
 def test_tracker_programs_data_sync_error():
-    repository = get_repo("tracker-programs-data-sync-error")
+    repository = get_repo(folder="tracker-programs-data-sync-error")
     reports = repository.get().items
 
     assert len(reports) == 1
@@ -84,7 +100,7 @@ def test_tracker_programs_data_sync_error():
 
 
 def test_metadata_sync_success():
-    repository = get_repo("metadata-synchronization-success")
+    repository = get_repo(folder="metadata-synchronization-success")
     reports = repository.get().items
 
     assert len(reports) == 1
@@ -95,7 +111,7 @@ def test_metadata_sync_success():
 
 
 def test_metadata_sync_error():
-    repository = get_repo("metadata-synchronization-error")
+    repository = get_repo(folder="metadata-synchronization-error")
     reports = repository.get().items
 
     assert len(reports) == 1
@@ -131,6 +147,6 @@ def get_log_folder(folder: str) -> str:
     return os.path.join(os.path.dirname(__file__), "logs", folder)
 
 
-def get_repo(logs_folder_path: str):
-    log_path = get_log_folder(logs_folder_path)
+def get_repo(folder: str):
+    log_path = get_log_folder(folder)
     return D2LogsParser(logs_folder_path=log_path)

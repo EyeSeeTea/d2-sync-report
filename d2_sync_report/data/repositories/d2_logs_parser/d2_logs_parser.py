@@ -69,11 +69,14 @@ class D2LogsParser:
             return reduce(reducer, get_log_entries(), initial_state)
 
         # Syncs can run in parallel, so we need to apply reducers separately and aggregate results.
-        state1 = apply_reducer(reducers.event_programs_reducer)
-        state2 = apply_reducer(reducers.tracker_programs_reducer)
-        state3 = apply_reducer(reducers.metadata_sync_reducer)
+        state1 = apply_reducer(reducers.data_sync_reducer)
+        state2 = apply_reducer(reducers.event_programs_reducer)
+        state3 = apply_reducer(reducers.tracker_programs_reducer)
+        state4 = apply_reducer(reducers.metadata_sync_reducer)
 
-        parsed_jobs = state1.parsed_jobs + state2.parsed_jobs + state3.parsed_jobs
+        parsed_jobs = (
+            state1.parsed_jobs + state2.parsed_jobs + state3.parsed_jobs + state4.parsed_jobs
+        )
         return (parsed_jobs, state1.last_processed_timestamp)
 
     def _get_log_entry(self, line: str) -> Optional[LogEntry]:

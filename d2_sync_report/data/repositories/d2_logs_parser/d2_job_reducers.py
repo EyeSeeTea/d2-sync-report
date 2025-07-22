@@ -9,6 +9,27 @@ from d2_sync_report.utils.uniq import uniq
 
 
 class D2JobReducers:
+    def data_sync_reducer(
+        self, state: SyncJobParserState, log_entry: LogEntry
+    ) -> SyncJobParserState:
+        matcher = LogEntryReducer(state, log_entry, section="DATA_SYNC")
+        type = "aggregatedData"
+
+        if matcher.matches("Starting DataValueSynchronization job", section=True):
+            return matcher.set_start_sync_job(type=type)
+        elif not state.current or state.current.type != type:
+            return state
+        elif matcher.matches("DataValueSynchronization failed", section=True):
+            return matcher.close_sync_job(success=False)
+        elif matcher.matches("Process completed after", section=True):
+            return matcher.close_sync_job(success=True)
+        elif matcher.matches_import_summaries():
+            return matcher.parse_import_summaries()
+        elif matcher.matches("Caused by:", section=False):
+            return matcher.add_error(log_entry)
+        else:
+            return state
+
     def event_programs_reducer(
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
@@ -27,6 +48,8 @@ class D2JobReducers:
             return matcher.close_sync_job(success=True)
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
+        elif matcher.matches("Caused by:", section=False):
+            return matcher.add_error(log_entry)
         else:
             return state
 
@@ -50,6 +73,8 @@ class D2JobReducers:
             return matcher.close_sync_job(success=True)
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
+        elif matcher.matches("Caused by:", section=False):
+            return matcher.add_error(log_entry)
         else:
             return state
 
@@ -91,7 +116,7 @@ class LogEntryReducer:
 
     def matches(self, pattern: str, section: bool = False) -> bool:
         line = self.log_entry.text.lower()
-        section_matches = self.section.lower() in line if section else True
+        section_matches = ("[" + self.section.lower() + " ") in line if section else True
         pattern_matches = pattern.lower() in line
         return section_matches and pattern_matches
 
