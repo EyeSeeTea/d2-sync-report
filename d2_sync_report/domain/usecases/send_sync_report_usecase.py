@@ -80,12 +80,12 @@ class SendSyncReportUseCase:
             ]
         )
 
-        formatted_reports = "\n\n".join(self._format_report(report) for report in reports.items)
+        formatted_reports = (
+            "\n\n".join(self._format_report(report) for report in reports.items)
+            or f"No sync jobs found: {period}"
+        )
 
-        if formatted_reports:
-            return header + "\n\n<hr />\n" + formatted_reports
-        else:
-            return f"No sync jobs found: {period}"
+        return header + "\n\n<hr />\n" + formatted_reports
 
     def get_reports(self, skip_cache: bool):
         since = self.get_since_datetime(skip_cache)
