@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 
+from d2_sync_report.domain.entities.instance import Instance
 from d2_sync_report.domain.entities.message import Message
+from d2_sync_report.domain.entities.metadata_versioning import MetadataVersioning
 from d2_sync_report.domain.entities.sync_job_report import (
     SyncJobReport,
     SyncJobReportItem,
@@ -9,6 +11,9 @@ from d2_sync_report.domain.entities.sync_job_report import (
 )
 from d2_sync_report.domain.entities.sync_job_report_execution import SyncJobReportExecution
 from d2_sync_report.domain.repositories.message_repository import MessageRepository
+from d2_sync_report.domain.repositories.metadata_versioning_repository import (
+    MetadataVersioningRepository,
+)
 from d2_sync_report.domain.repositories.sync_job_report_execution_repository import (
     SyncJobReportExecutionRepository,
 )
@@ -25,24 +30,27 @@ class SendSyncReportUseCase:
         self,
         sync_job_report_execution_repository: SyncJobReportExecutionRepository,
         sync_job_report_repository: SyncJobReportRepository,
+        metadata_versioning_repository: MetadataVersioningRepository,
         user_repository: UserRepository,
         message_repository: MessageRepository,
     ):
         self.sync_job_report_execution_repository = sync_job_report_execution_repository
         self.sync_job_report = sync_job_report_repository
+        self.metadata_versioning_repository = metadata_versioning_repository
         self.user_repository: UserRepository = user_repository
         self.message_repository: MessageRepository = message_repository
 
     def execute(
         self,
+        instance: Instance,
         user_group_name_to_send: Optional[str],
         skip_cache: bool,
-        url: str,
     ) -> SyncJobReport:
         now = datetime.now()
         user_emails = self.get_users_in_group(user_group_name_to_send)
         since, reports = self.get_reports(skip_cache)
-        contents = self.get_message_contents(now, since, reports, url)
+        metadata_versioning = self.metadata_versioning_repository.get(instance)
+        contents = self.get_message_contents(now, since, reports, instance.url, metadata_versioning)
 
         if not user_emails:
             print(contents)
@@ -55,20 +63,27 @@ class SendSyncReportUseCase:
         return reports
 
     def get_message_contents(
-        self, now: datetime, since: Optional[datetime], reports: SyncJobReport, url: str
+        self,
+        now: datetime,
+        since: Optional[datetime],
+        reports: SyncJobReport,
+        url: str,
+        metadata_versioning: MetadataVersioning,
     ) -> str:
         period = f"{format_datetime(since)} -> {format_datetime(now)}"
         header = "\n".join(
             [
                 f"URL: {url}",
                 f"Period: {period}",
+                f"Local Metadata: {metadata_versioning.local}",
+                f"Remote Metadata: {metadata_versioning.remote}",
             ]
         )
 
         formatted_reports = "\n\n".join(self._format_report(report) for report in reports.items)
 
         if formatted_reports:
-            return header + "\n\n" + formatted_reports
+            return header + "\n\n<hr />\n" + formatted_reports
         else:
             return f"No sync jobs found: {period}"
 

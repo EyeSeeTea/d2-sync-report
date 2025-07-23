@@ -4,6 +4,9 @@ from typing import Annotated, Optional
 import tyro
 from tyro.conf import arg
 
+from d2_sync_report.data.repositories.metadata_versioning_d2_repository import (
+    MetadataVersioningD2Repository,
+)
 from d2_sync_report.data.repositories.sync_job_report_execution_file_repository import (
     SyncJobReportExecutionFileRepository,
 )
@@ -43,12 +46,13 @@ def main() -> None:
     SendSyncReportUseCase(
         SyncJobReportExecutionFileRepository(),
         SyncJobReportD2Repository(args.logs_folder_path),
+        MetadataVersioningD2Repository(),
         UserD2Repository(instance),
         MessageD2Repository(instance),
     ).execute(
         user_group_name_to_send=args.notify_user_group,
         skip_cache=args.ignore_cache,
-        url=args.url,
+        instance=instance,
     )
 
 

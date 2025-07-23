@@ -1,5 +1,5 @@
 import base64
-from typing import Literal, Type, TypeVar
+from typing import Literal, Optional, Type, TypeVar
 import requests
 from urllib.parse import urljoin
 from pydantic import BaseModel
@@ -14,12 +14,13 @@ def request(
     instance: Instance,
     method: Literal["GET", "POST"],
     path: str,
-    params: list[tuple[str, str]],
     response_model: Type[T],
+    params: Optional[list[tuple[str, str]]] = None,
 ) -> T:
     url = urljoin(instance.url, path)
     headers = get_headers(instance.auth)
-    print(f"{method} {url} - {params}")
+
+    print(f"{method} {url} - {params}" if params and method == "GET" else f"{method} {url}")
 
     response = requests.request(
         method,
@@ -29,7 +30,6 @@ def request(
     )
 
     response.raise_for_status()
-    print(f"Response status: {response.status_code}")
 
     return response_model.model_validate(response.json())
 
