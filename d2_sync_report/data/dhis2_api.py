@@ -17,6 +17,10 @@ def request(
     response_model: Type[T],
     params: Optional[list[tuple[str, str]]] = None,
 ) -> T:
+    # TEMPORAL: return empty response for mock instances
+    if "mock-instance" in instance.url:
+        return {}  # type: ignore
+
     url = urljoin(instance.url, path)
     headers = get_headers(instance.auth)
 
@@ -29,9 +33,14 @@ def request(
         headers=headers,
     )
 
-    response.raise_for_status()
+    if not response.ok:
+        print("Response body:", response.text)
+        response.raise_for_status()
 
-    return response_model.model_validate(response.json())
+    if response_model is AnyResponse:
+        return response.json()
+    else:
+        return response_model.model_validate(response.json())
 
 
 def get_headers(auth: Auth) -> dict[str, str]:

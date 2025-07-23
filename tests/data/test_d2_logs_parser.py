@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
+from d2_sync_report.domain.entities.instance import Instance, PersonalTokenAccessAuth
 
 ## Aggregated data synchronization
 
@@ -47,8 +48,8 @@ def test_event_programs_data_sync_error():
         report.errors[0],
         [
             'status="ERROR"',
-            'object_id="ZOkh9BeNXYF"',
-            'message="Program is not assigned to this Organisation Unit: WA5iEXjqCnS"',
+            'object_id="Gq942x50jWX"',
+            'message="Program is not assigned to this Organisation Unit: ldZyp3zdLOL"',
         ],
     )
 
@@ -90,7 +91,7 @@ def test_tracker_programs_data_sync_error():
         report.errors[0],
         [
             'status="ERROR"',
-            'object_id="ZOkh9BeNXYF"',
+            'object_id="Gq942x50jWX"',
             'message="Program is not assigned to this Organisation Unit: WA5iEXjqCnS"',
         ],
     )
@@ -147,6 +148,11 @@ def get_log_folder(folder: str) -> str:
     return os.path.join(os.path.dirname(__file__), "logs", folder)
 
 
+mock_instance = Instance(
+    url="https://mock-instance", auth=PersonalTokenAccessAuth(token="NOT_USED")
+)
+
+
 def get_repo(folder: str):
     log_path = get_log_folder(folder)
-    return D2LogsParser(logs_folder_path=log_path)
+    return D2LogsParser(mock_instance, logs_folder_path=log_path)

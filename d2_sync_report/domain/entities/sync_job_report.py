@@ -18,6 +18,7 @@ class SyncJobReportItem:
     start: datetime
     end: datetime
     errors: List[str]
+    suggestions: List[str]
 
 
 @dataclass

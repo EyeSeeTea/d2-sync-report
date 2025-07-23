@@ -127,12 +127,15 @@ class LogEntryReducer:
         if not state.current:
             return state
 
+        errors = uniq(state.current.errors)
+
         parsed = SyncJobReportItem(
             type=state.current.type,
             success=success and not state.current.errors,
-            errors=uniq(state.current.errors),
             start=state.current.start,
             end=log_entry.timestamp or state.current.start,
+            errors=errors,
+            suggestions=[],
         )
 
         return SyncJobParserState(

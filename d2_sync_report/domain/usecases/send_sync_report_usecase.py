@@ -50,7 +50,7 @@ class SendSyncReportUseCase:
         user_emails = self.get_users_in_group(user_group_name_to_send)
         since, reports = self.get_reports(skip_cache)
         metadata_versioning = self.metadata_versioning_repository.get(instance)
-        contents = self.get_message_contents(now, since, reports, instance.url, metadata_versioning)
+        contents = self.get_message_contents(now, since, reports, instance, metadata_versioning)
 
         if not user_emails:
             print(contents)
@@ -67,13 +67,14 @@ class SendSyncReportUseCase:
         now: datetime,
         since: Optional[datetime],
         reports: SyncJobReport,
-        url: str,
+        instance: Instance,
         metadata_versioning: MetadataVersioning,
     ) -> str:
         period = f"{format_datetime(since)} -> {format_datetime(now)}"
+
         header = "\n".join(
             [
-                f"URL: {url}",
+                f"Instance: {instance.url}",
                 f"Period: {period}",
                 f"Local Metadata: {metadata_versioning.local}",
                 f"Remote Metadata: {metadata_versioning.remote}",
@@ -81,11 +82,11 @@ class SendSyncReportUseCase:
         )
 
         formatted_reports = (
-            "\n\n".join(self._format_report(report) for report in reports.items)
+            "\n\n".join(self._format_report(instance, report) for report in reports.items)
             or f"No sync jobs found: {period}"
         )
 
-        return header + "\n\n<hr />\n" + formatted_reports
+        return header + "\n\n\n" + formatted_reports
 
     def get_reports(self, skip_cache: bool):
         since = self.get_since_datetime(skip_cache)
@@ -114,7 +115,7 @@ class SendSyncReportUseCase:
                 )
             )
 
-    def _format_report(self, report: SyncJobReportItem) -> str:
+    def _format_report(self, instance: Instance, report: SyncJobReportItem) -> str:
         indent = " " * 2
 
         parts: List[Optional[str]] = [
@@ -124,16 +125,43 @@ class SendSyncReportUseCase:
             f"End: {format_datetime(report.end)}",
         ]
 
-        def add_index(msg: str, idx: int) -> str:
-            return indent + f"[{idx + 1}/{len(report.errors)}] {msg}"
+        def add_index(group: List[str], msg: str, idx: int) -> str:
+            return indent + f"[{idx + 1}/{len(group)}] {msg}"
 
-        errors = (
-            f"Errors:\n{'\n'.join(add_index(error, idx) for (idx, error) in enumerate(report.errors))}"
+        errors_str = (
+            "\n".join(
+                [
+                    "Errors:",
+                    *[
+                        add_index(report.errors, error, idx)
+                        for (idx, error) in enumerate(report.errors)
+                    ],
+                ]
+            )
             if report.errors
             else ""
         )
 
-        return "\n".join(compact(parts)) + "\n" + errors
+        suggestions_str = (
+            "\n".join(
+                [
+                    "Suggestions:",
+                    *[
+                        add_index(report.suggestions, suggestion, idx)
+                        for idx, suggestion in enumerate(report.suggestions)
+                    ],
+                ]
+            )
+            if report.suggestions
+            else ""
+        )
+
+        return (
+            "\n".join(compact(parts))
+            + "\n"
+            + errors_str
+            + ("\n" + suggestions_str if suggestions_str else "")
+        )
 
 
 report_type_names: dict[SyncJobType, str] = {
@@ -149,6 +177,6 @@ def compact(xs: list[str | None]) -> list[str]:
     return [x for x in xs if x is not None]
 
 
-def format_datetime(dt: Optional[datetime], if_empty: str = "-") -> str:
+def format_datetime(dt: Optional[datetime], if_empty: str = "NO-DATE") -> str:
     """Format datetime to string in the format YYYY-MM-DD HH:MM:SS."""
     return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else if_empty

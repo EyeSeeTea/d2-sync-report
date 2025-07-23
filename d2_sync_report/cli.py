@@ -45,7 +45,7 @@ def main() -> None:
 
     SendSyncReportUseCase(
         SyncJobReportExecutionFileRepository(),
-        SyncJobReportD2Repository(args.logs_folder_path),
+        SyncJobReportD2Repository(instance, args.logs_folder_path),
         MetadataVersioningD2Repository(),
         UserD2Repository(instance),
         MessageD2Repository(instance),

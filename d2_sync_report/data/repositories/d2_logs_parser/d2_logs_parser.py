@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import os
 from datetime import datetime
 from functools import reduce
@@ -8,8 +8,12 @@ from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
     LogEntry,
     SyncJobParserState,
 )
+from d2_sync_report.data.repositories.d2_logs_suggestions import get_suggestions_from_error
+from d2_sync_report.domain.entities.instance import Instance
 from d2_sync_report.domain.entities.sync_job_report import SyncJobReport, SyncJobReportItem
 import re
+
+from d2_sync_report.utils.uniq import uniq
 
 """
 This class parses the DHIS2 logs to extract synchronization job reports.
@@ -26,7 +30,8 @@ and based on the content of the log entry, it updates the state accordingly.
 
 
 class D2LogsParser:
-    def __init__(self, logs_folder_path: str):
+    def __init__(self, instance: Instance, logs_folder_path: str):
+        self.instance = instance
         self.logs_folder_path = logs_folder_path
 
     def get(self, since: Optional[datetime] = None) -> SyncJobReport:
@@ -39,7 +44,25 @@ class D2LogsParser:
 
         (items, last_processed) = self._get_log_report_items(get_log_entries())
 
-        return SyncJobReport(items=items, last_processed=last_processed or datetime.now())
+        return SyncJobReport(
+            items=self._add_suggestions(items),
+            last_processed=last_processed or datetime.now(),
+        )
+
+    def _add_suggestions(self, items: List[SyncJobReportItem]) -> List[SyncJobReportItem]:
+        items_with_suggestions: List[SyncJobReportItem] = []
+
+        for item in items:
+            suggestions = [
+                suggestion
+                for error in item.errors
+                for suggestion in get_suggestions_from_error(self.instance, error)
+            ]
+
+            item2 = replace(item, suggestions=uniq(suggestions))
+            items_with_suggestions.append(item2)
+
+        return items_with_suggestions
 
     def _get_log_files(self) -> list[str]:
         rotated_log_files = [
