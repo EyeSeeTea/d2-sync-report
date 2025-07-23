@@ -37,14 +37,14 @@ class SendSyncReportUseCase:
         self,
         user_group_name_to_send: Optional[str],
         skip_cache: bool,
+        url: str,
     ) -> SyncJobReport:
         now = datetime.now()
         user_emails = self.get_users_in_group(user_group_name_to_send)
         since, reports = self.get_reports(skip_cache)
-        contents = self.get_message_contents(now, since, reports)
+        contents = self.get_message_contents(now, since, reports, url)
 
         if not user_emails:
-            print("No message sent:\n")
             print(contents)
         else:
             message = Message(subject=self.message_subject, text=contents, recipients=user_emails)
@@ -55,15 +55,22 @@ class SendSyncReportUseCase:
         return reports
 
     def get_message_contents(
-        self, now: datetime, since: Optional[datetime], reports: SyncJobReport
+        self, now: datetime, since: Optional[datetime], reports: SyncJobReport, url: str
     ) -> str:
+        period = f"{format_datetime(since)} -> {format_datetime(now)}"
+        header = "\n".join(
+            [
+                f"URL: {url}",
+                f"Period: {period}",
+            ]
+        )
+
         formatted_reports = "\n\n".join(self._format_report(report) for report in reports.items)
 
         if formatted_reports:
-            return formatted_reports
+            return header + "\n\n" + formatted_reports
         else:
-            since_str = since.strftime("%Y-%m-%d %H:%M:%S") if since else "BEGINNING"
-            return f"No sync jobs found ({since_str} -> {now.strftime('%Y-%m-%d %H:%M:%S')})."
+            return f"No sync jobs found: {period}"
 
     def get_reports(self, skip_cache: bool):
         since = self.get_since_datetime(skip_cache)
@@ -127,6 +134,6 @@ def compact(xs: list[str | None]) -> list[str]:
     return [x for x in xs if x is not None]
 
 
-def format_datetime(dt: datetime) -> str:
+def format_datetime(dt: Optional[datetime], if_empty: str = "-") -> str:
     """Format datetime to string in the format YYYY-MM-DD HH:MM:SS."""
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
+    return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else if_empty
