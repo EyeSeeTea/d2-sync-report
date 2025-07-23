@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 import os
 from datetime import datetime
 from functools import reduce
-from typing import Callable, Iterator, List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 from d2_sync_report.data.repositories.d2_logs_parser.d2_job_reducers import D2JobReducers
 from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
     LogEntry,
@@ -36,7 +37,7 @@ class D2LogsParser:
             for log_file in log_files:
                 yield from self._get_log_entries(log_file, since)
 
-        (items, last_processed) = self._get_log_report_items(get_log_entries)
+        (items, last_processed) = self._get_log_report_items(get_log_entries())
 
         return SyncJobReport(items=items, last_processed=last_processed or datetime.now())
 
@@ -75,26 +76,26 @@ class D2LogsParser:
                     yield entry
 
     def _get_log_report_items(
-        self, get_log_entries: Callable[[], Iterator[LogEntry]]
+        self, log_entries: Iterator[LogEntry]
     ) -> Tuple[List[SyncJobReportItem], Optional[datetime]]:
         initial_state = SyncJobParserState.initial()
-        reducers = D2JobReducers()
 
-        def apply_reducer(
-            reducer: Callable[[SyncJobParserState, LogEntry], SyncJobParserState],
-        ) -> SyncJobParserState:
-            return reduce(reducer, get_log_entries(), initial_state)
+        # Sync jobs can run in parallel, so reduce parsers isolatedly and aggregate results at the end.
 
-        # Syncs can run in parallel, so we need to apply reducers separately and aggregate results.
-        state1 = apply_reducer(reducers.data_sync_reducer)
-        state2 = apply_reducer(reducers.event_programs_reducer)
-        state3 = apply_reducer(reducers.tracker_programs_reducer)
-        state4 = apply_reducer(reducers.metadata_sync_reducer)
+        initial_compositite_state = ReducersState(
+            initial_state, initial_state, initial_state, initial_state
+        )
+
+        state = reduce(ReducersState.reducer, log_entries, initial_compositite_state)
 
         parsed_jobs = (
-            state1.parsed_jobs + state2.parsed_jobs + state3.parsed_jobs + state4.parsed_jobs
+            state.data_sync_state.parsed_jobs
+            + state.event_programs_state.parsed_jobs
+            + state.tracker_programs_state.parsed_jobs
+            + state.metadata_sync_state.parsed_jobs
         )
-        return (parsed_jobs, state1.last_processed_timestamp)
+
+        return (parsed_jobs, state.data_sync_state.last_processed_timestamp)
 
     def _get_log_entry(self, line: str) -> Optional[LogEntry]:
         # "* INFO 2025-07-16T09:04:50,123 Some message"
@@ -114,6 +115,26 @@ class D2LogsParser:
                 return LogEntry(timestamp=None, text=line)
 
             return LogEntry(timestamp=timestamp, text=" ".join(parts[3:]))
+
+
+# Support types in static method, with importing...
+
+
+@dataclass
+class ReducersState:
+    data_sync_state: SyncJobParserState
+    event_programs_state: SyncJobParserState
+    tracker_programs_state: SyncJobParserState
+    metadata_sync_state: SyncJobParserState
+
+    @staticmethod
+    def reducer(state: "ReducersState", log_entry: LogEntry) -> "ReducersState":
+        reducers = D2JobReducers()
+        state1 = reducers.data_sync_reducer(state.data_sync_state, log_entry)
+        state2 = reducers.event_programs_reducer(state.event_programs_state, log_entry)
+        state3 = reducers.tracker_programs_reducer(state.tracker_programs_state, log_entry)
+        state4 = reducers.metadata_sync_reducer(state.metadata_sync_state, log_entry)
+        return ReducersState(state1, state2, state3, state4)
 
 
 def error(message: str) -> None:
