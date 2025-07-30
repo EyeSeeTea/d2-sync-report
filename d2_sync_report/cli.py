@@ -4,7 +4,7 @@ from typing import Annotated, Optional
 import tyro
 from tyro.conf import arg
 
-from d2_sync_report.data.dhis2_api import D2Api
+from d2_sync_report.data.dhis2_api import D2ApiReal
 from d2_sync_report.data.repositories.metadata_versioning_d2_repository import (
     MetadataVersioningD2Repository,
 )
@@ -43,7 +43,7 @@ class Args:
 def main() -> None:
     args = tyro.cli(Args)
     instance = get_instance(args)
-    api = D2Api(instance)
+    api = D2ApiReal(instance)
 
     SendSyncReportUseCase(
         SyncJobReportExecutionFileRepository(),

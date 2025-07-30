@@ -1,7 +1,9 @@
 import os
 from datetime import datetime
+from typing import Literal, Mapping, Optional, Type
+from unittest.mock import Mock
 
-from d2_sync_report.data.dhis2_api import D2Api
+from d2_sync_report.data.dhis2_api import T, D2Api
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
 from d2_sync_report.domain.entities.instance import Instance, PersonalTokenAccessAuth
 
@@ -80,7 +82,17 @@ def test_tracker_programs_data_sync_success():
 
 def test_tracker_programs_data_sync_error():
     repository = get_repo(folder="tracker-programs-data-sync-error")
+
+    api.mock_request.return_value = {"programs": []}
+
     reports = repository.get().items
+
+    # api.mock_request.assert_called_once_with(
+    #    "GET",
+    #    "/api/programs",
+    #    AnyResponse,
+    #    [("fields", "id,name"), ("filter", "id:eq:Gq942x50jWX")],
+    # )
 
     assert len(reports) == 1
     report = reports[0]
@@ -149,11 +161,29 @@ def get_log_folder(folder: str) -> str:
     return os.path.join(os.path.dirname(__file__), "logs", folder)
 
 
-mock_instance = Instance(
-    url="https://mock-instance", auth=PersonalTokenAccessAuth(token="NOT_USED")
-)
+class D2ApiMock(D2Api):
+    def __init__(self):
+        mock_instance = Instance(
+            url="https://mock-instance",
+            auth=PersonalTokenAccessAuth(token="NOT_USED"),
+        )
+        super().__init__(instance=mock_instance)
+        self.mock_request = Mock()
 
-api = D2Api(mock_instance)
+    def request(
+        self,
+        method: Literal["GET", "POST"],
+        path: str,
+        response_model: Type[T],
+        params: Optional[list[tuple[str, str]]] = None,
+        data: Optional[Mapping[str, str]] = None,
+    ) -> T:
+        return self.mock_request(method, path, response_model, params, data)
+
+    # We can define helper methods to declaratively set expectations
+
+
+api = D2ApiMock()
 
 
 def get_repo(folder: str):

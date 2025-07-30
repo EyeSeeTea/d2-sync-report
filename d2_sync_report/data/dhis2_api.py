@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import base64
 from typing import Literal, Mapping, Optional, Type, TypeVar
 import requests
@@ -10,7 +11,7 @@ from d2_sync_report.domain.entities.instance import Auth, Instance
 T = TypeVar("T", bound=BaseModel)
 
 
-class D2Api:
+class D2Api(ABC):
     def __init__(self, instance: Instance):
         self.instance = instance
 
@@ -21,6 +22,7 @@ class D2Api:
         params: Optional[list[tuple[str, str]]] = None,
     ) -> T:
         """Send a GET request to the DHIS2 API."""
+        print(f"GET {path} - {params}")
         return self.request("GET", path, response_model, params)
 
     def post(
@@ -31,8 +33,9 @@ class D2Api:
         data: Optional[Mapping[str, str]] = None,
     ) -> T:
         """Send a POST request to the DHIS2 API."""
-        return self.request("POST", path, response_model, params, data=data)
+        return self.request("POST", path, response_model, params, data)
 
+    @abstractmethod
     def request(
         self,
         method: Literal["GET", "POST"],
@@ -41,10 +44,19 @@ class D2Api:
         params: Optional[list[tuple[str, str]]] = None,
         data: Optional[Mapping[str, str]] = None,
     ) -> T:
-        # TEMPORAL: return empty response for mock instances
-        # if "mock-instance" in instance.url:
-        #    return {}  # type: ignore
+        """Send a request to the DHIS2 API."""
+        pass
 
+
+class D2ApiReal(D2Api):
+    def request(
+        self,
+        method: Literal["GET", "POST"],
+        path: str,
+        response_model: Type[T],
+        params: Optional[list[tuple[str, str]]] = None,
+        data: Optional[Mapping[str, str]] = None,
+    ) -> T:
         url = urljoin(self.instance.url, path)
         headers = get_headers(self.instance.auth)
 
