@@ -16,11 +16,11 @@ Requirements: Python 3.8+
 User installation (no root permissions required):
 
 ```shell
-$ python3 -m venv .venv
-$ .venv/bin/pip install --upgrade pip
-$ .venv/bin/pip install hatch
-$ .venv/bin/pip install -e .
-$ .venv/bin/d2-sync-report
+$ python3 -m venv .venv # Initialize a virtual environment using system-wide python3 installation
+$ .venv/bin/pip install --upgrade pip # Make sure we are using the latest pip package manager version
+$ .venv/bin/pip install hatch # Strictly only needed for development
+$ .venv/bin/pip install -e . # install d2-sync-report from sources
+$ .venv/bin/d2-sync-report # Check that it works
 ```
 
 ## Usage
@@ -51,14 +51,14 @@ $ d2-sync-report \
     --logs-folder-path="/path/to/dhis2/config/logs"
 ```
 
-Process logs stored in a Docker container (use format `CONTAINER_NAME:LOGS_FOLDER_PATH`) and display the report on the screen:
+Process logs stored in a Docker container (`CONTAINER_NAME:LOGS_FOLDER_PATH`) and display the report:
 
 ```shell
 $ d2-sync-report \
     --logs-folder-path="dhis2web-test-two-test:/opt/dhis2/config/local/logs"
 ```
 
-Process local logs and send the report to every user in the "System admin" user group for the specified DHIS2 instance:
+Process local logs and send the report to every user in the "System admin" user group in some DHIS2 instance:
 
 ```shell
 $ d2-sync-report \
@@ -71,6 +71,7 @@ $ d2-sync-report \
 ## Development
 
 ```shell
-$ .venv/bin/hatch run cli
 $ .venv/bin/hatch run test
+$ .venv/bin/hatch run lint
+$ .venv/bin/hatch run cli
 ```

@@ -1,4 +1,5 @@
 import re
+import json
 from typing import Any, TypedDict, Optional, List
 from string import Formatter
 
@@ -12,8 +13,6 @@ class ErrorMapping(TypedDict):
 
 
 def get_error_mappings_from_file(file_path: str) -> List[ErrorMapping]:
-    import json
-
     with open(file_path, "r") as file:
         data = json.load(file)
 

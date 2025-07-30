@@ -35,7 +35,7 @@ class Args:
     auth: Annotated[str, arg(help="USER:PASS or PAT token", metavar="AUTH")]
     ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
     notify_user_group: Annotated[
-        Optional[str], arg(help="User group to send report to", metavar="NAME or CODE")
+        Optional[str], arg(help="User group to send the report to", metavar="NAME or CODE")
     ] = None
 
 

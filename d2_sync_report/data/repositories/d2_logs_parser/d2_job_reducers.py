@@ -16,7 +16,7 @@ class D2JobReducers:
         type = SyncJobType.AGGREGATED
 
         if matcher.matches("Starting DataValueSynchronization job", section=True):
-            return matcher.set_start_sync_job(type=type)
+            return matcher.open_sync_job(type=type)
         elif not state.current or state.current.type != type:
             return state
         elif matcher.matches("DataValueSynchronization failed", section=True):
@@ -37,7 +37,7 @@ class D2JobReducers:
         type = SyncJobType.EVENT_PROGRAMS
 
         if matcher.matches("Starting Event programs data synchronization", section=True):
-            return matcher.set_start_sync_job(type=type)
+            return matcher.open_sync_job(type=type)
         elif not state.current or state.current.type != type:
             return state
         elif matcher.matches("Event programs data synchronization failed", section=True):
@@ -60,7 +60,7 @@ class D2JobReducers:
         type = SyncJobType.TRACKER_PROGRAMS
 
         if matcher.matches("Starting Tracker programs data synchronization", section=True):
-            return matcher.set_start_sync_job(type=type)
+            return matcher.open_sync_job(type=type)
         elif not state.current or state.current.type != type:
             return state
         elif matcher.matches("Tracker programs data synchronization failed", section=True):
@@ -85,7 +85,7 @@ class D2JobReducers:
         type = SyncJobType.METADATA
 
         if matcher.matches("Metadata Sync cron Job started", section=False):
-            return matcher.set_start_sync_job(type=type)
+            return matcher.open_sync_job(type=type)
         elif not state.current or state.current.type != type:
             return state
         elif matcher.matches("Metadata sync cron job ended", section=False):
@@ -144,7 +144,7 @@ class LogEntryReducer:
             last_processed_timestamp=log_entry.timestamp,
         )
 
-    def set_start_sync_job(self, type: SyncJobType) -> SyncJobParserState:
+    def open_sync_job(self, type: SyncJobType) -> SyncJobParserState:
         state = self.state
         log_entry = self.log_entry
 
