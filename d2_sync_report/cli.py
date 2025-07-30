@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Annotated, Optional
 import tyro
 from tyro.conf import arg
@@ -60,7 +60,7 @@ def main() -> None:
 
 def log_args(args: Args) -> None:
     obfuscated_auth = re.sub(r"[^:]", "*", args.auth) if args.auth else "UNSET"
-    args_to_log = Args(**args.__dict__, auth=obfuscated_auth)
+    args_to_log = replace(args, auth=obfuscated_auth)
     print(args_to_log)
 
 

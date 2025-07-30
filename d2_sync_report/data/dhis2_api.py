@@ -1,5 +1,5 @@
 import base64
-from typing import Literal, Optional, Type, TypeVar
+from typing import Literal, Mapping, Optional, Type, TypeVar
 import requests
 from urllib.parse import urljoin
 from pydantic import BaseModel
@@ -28,9 +28,10 @@ class D2Api:
         path: str,
         response_model: Type[T],
         params: Optional[list[tuple[str, str]]] = None,
+        data: Optional[Mapping[str, str]] = None,
     ) -> T:
         """Send a POST request to the DHIS2 API."""
-        return self.request("POST", path, response_model, params)
+        return self.request("POST", path, response_model, params, data=data)
 
     def request(
         self,
@@ -38,6 +39,7 @@ class D2Api:
         path: str,
         response_model: Type[T],
         params: Optional[list[tuple[str, str]]] = None,
+        data: Optional[Mapping[str, str]] = None,
     ) -> T:
         # TEMPORAL: return empty response for mock instances
         # if "mock-instance" in instance.url:
@@ -48,12 +50,7 @@ class D2Api:
 
         print(f"{method} {url} - {params}" if params and method == "GET" else f"{method} {url}")
 
-        response = requests.request(
-            method,
-            url,
-            params=params,
-            headers=headers,
-        )
+        response = requests.request(method, url, params=params, headers=headers, data=data)
 
         if not response.ok:
             print("Response body:", response.text)
