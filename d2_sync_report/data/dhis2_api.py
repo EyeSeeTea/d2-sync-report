@@ -10,37 +10,59 @@ from d2_sync_report.domain.entities.instance import Auth, Instance
 T = TypeVar("T", bound=BaseModel)
 
 
-def request(
-    instance: Instance,
-    method: Literal["GET", "POST"],
-    path: str,
-    response_model: Type[T],
-    params: Optional[list[tuple[str, str]]] = None,
-) -> T:
-    # TEMPORAL: return empty response for mock instances
-    if "mock-instance" in instance.url:
-        return {}  # type: ignore
+class D2Api:
+    def __init__(self, instance: Instance):
+        self.instance = instance
 
-    url = urljoin(instance.url, path)
-    headers = get_headers(instance.auth)
+    def get(
+        self,
+        path: str,
+        response_model: Type[T],
+        params: Optional[list[tuple[str, str]]] = None,
+    ) -> T:
+        """Send a GET request to the DHIS2 API."""
+        return self.request("GET", path, response_model, params)
 
-    print(f"{method} {url} - {params}" if params and method == "GET" else f"{method} {url}")
+    def post(
+        self,
+        path: str,
+        response_model: Type[T],
+        params: Optional[list[tuple[str, str]]] = None,
+    ) -> T:
+        """Send a POST request to the DHIS2 API."""
+        return self.request("POST", path, response_model, params)
 
-    response = requests.request(
-        method,
-        url,
-        params=params,
-        headers=headers,
-    )
+    def request(
+        self,
+        method: Literal["GET", "POST"],
+        path: str,
+        response_model: Type[T],
+        params: Optional[list[tuple[str, str]]] = None,
+    ) -> T:
+        # TEMPORAL: return empty response for mock instances
+        # if "mock-instance" in instance.url:
+        #    return {}  # type: ignore
 
-    if not response.ok:
-        print("Response body:", response.text)
-        response.raise_for_status()
+        url = urljoin(self.instance.url, path)
+        headers = get_headers(self.instance.auth)
 
-    if response_model is AnyResponse:
-        return response.json()
-    else:
-        return response_model.model_validate(response.json())
+        print(f"{method} {url} - {params}" if params and method == "GET" else f"{method} {url}")
+
+        response = requests.request(
+            method,
+            url,
+            params=params,
+            headers=headers,
+        )
+
+        if not response.ok:
+            print("Response body:", response.text)
+            response.raise_for_status()
+
+        if response_model is AnyResponse:
+            return response.json()
+        else:
+            return response_model.model_validate(response.json())
 
 
 def get_headers(auth: Auth) -> dict[str, str]:

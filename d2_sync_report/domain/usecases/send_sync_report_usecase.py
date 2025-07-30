@@ -49,7 +49,7 @@ class SendSyncReportUseCase:
         now = datetime.now()
         user_emails = self.get_users_in_group(user_group_name_to_send)
         since, reports = self.get_reports(skip_cache)
-        metadata_versioning = self.metadata_versioning_repository.get(instance)
+        metadata_versioning = self.metadata_versioning_repository.get()
         contents = self.get_message_contents(now, since, reports, instance, metadata_versioning)
 
         if not user_emails:

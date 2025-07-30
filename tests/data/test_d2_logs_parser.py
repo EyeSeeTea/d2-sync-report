@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+from d2_sync_report.data.dhis2_api import D2Api
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
 from d2_sync_report.domain.entities.instance import Instance, PersonalTokenAccessAuth
 
@@ -152,7 +153,9 @@ mock_instance = Instance(
     url="https://mock-instance", auth=PersonalTokenAccessAuth(token="NOT_USED")
 )
 
+api = D2Api(mock_instance)
+
 
 def get_repo(folder: str):
     log_path = get_log_folder(folder)
-    return D2LogsParser(mock_instance, logs_folder_path=log_path)
+    return D2LogsParser(api, logs_folder_path=log_path)

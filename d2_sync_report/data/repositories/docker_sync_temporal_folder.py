@@ -6,6 +6,8 @@ from typing import Optional
 
 
 class DockerSyncTemporalFolder:
+    temp_dir: Optional[str]
+
     def __init__(self, container_name: str, container_source_folder: str):
         self.container_name = container_name
         self.container_source_folder = container_source_folder

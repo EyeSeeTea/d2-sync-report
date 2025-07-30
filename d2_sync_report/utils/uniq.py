@@ -14,4 +14,9 @@ def uniq(xs: List[T]) -> List[T]:
     [1, 2, 3, 4]
     """
     seen: Set[T] = set()
-    return [x for x in xs if not (x in seen or seen.add(x))]
+    result: List[T] = []
+    for x in xs:
+        if x not in seen:
+            seen.add(x)
+            result.append(x)
+    return result

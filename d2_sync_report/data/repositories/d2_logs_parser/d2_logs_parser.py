@@ -3,13 +3,15 @@ import os
 from datetime import datetime
 from functools import reduce
 from typing import Iterator, List, Optional, Tuple
+from d2_sync_report.data.dhis2_api import D2Api
 from d2_sync_report.data.repositories.d2_logs_parser.d2_job_reducers import D2JobReducers
 from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
     LogEntry,
     SyncJobParserState,
 )
-from d2_sync_report.data.repositories.d2_logs_suggestions import get_suggestions_from_error
-from d2_sync_report.domain.entities.instance import Instance
+from d2_sync_report.data.repositories.d2_logs_suggestions import (
+    D2LogsSuggestions,
+)
 from d2_sync_report.domain.entities.sync_job_report import SyncJobReport, SyncJobReportItem
 import re
 
@@ -30,9 +32,12 @@ and based on the content of the log entry, it updates the state accordingly.
 
 
 class D2LogsParser:
-    def __init__(self, instance: Instance, logs_folder_path: str):
-        self.instance = instance
+    api: D2Api
+
+    def __init__(self, api: D2Api, logs_folder_path: str):
+        self.api = api
         self.logs_folder_path = logs_folder_path
+        self.d2_logs_suggestions = D2LogsSuggestions(self.api)
 
     def get(self, since: Optional[datetime] = None) -> SyncJobReport:
         log_files = self._get_log_files()
@@ -56,7 +61,7 @@ class D2LogsParser:
             suggestions = [
                 suggestion
                 for error in item.errors
-                for suggestion in get_suggestions_from_error(self.instance, error)
+                for suggestion in self.d2_logs_suggestions.get_suggestions_from_error(error)
             ]
 
             item2 = replace(item, suggestions=uniq(suggestions))

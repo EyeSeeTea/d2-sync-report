@@ -10,7 +10,6 @@ If this is not enough, we should create a SMTP implementation.
 """
 
 from d2_sync_report.data import dhis2_api
-from d2_sync_report.domain.entities.instance import Instance
 from d2_sync_report.domain.entities.message import Message
 from d2_sync_report.domain.repositories.message_repository import MessageRepository
 
@@ -18,10 +17,10 @@ from d2_sync_report.domain.repositories.message_repository import MessageReposit
 class MessageD2Repository(MessageRepository):
     # DHIS2 sends emails using query parameters in GET requests.
     # Restrict message size to avoid 414 Request-URI Too Long errors.
-    max_length = 6000
+    max_length = 4000
 
-    def __init__(self, instance: Instance):
-        self.instance = instance
+    def __init__(self, api: dhis2_api.D2Api):
+        self.api = api
 
     def send(self, message: Message) -> None:
         recipients = ", ".join(message.recipients) or "-"
@@ -38,10 +37,8 @@ class MessageD2Repository(MessageRepository):
             ("message", clipped_message_text),
         ]
 
-        dhis2_api.request(
-            self.instance,
+        self.api.post(
             path="/api/email/notification",
-            method="POST",
             params=params,
             response_model=dhis2_api.AnyResponse,
         )

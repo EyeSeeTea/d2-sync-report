@@ -3,7 +3,7 @@ import json
 from typing import Any, TypedDict, Optional, List
 from string import Formatter
 
-from d2_sync_report.data import dhis2_api
+from d2_sync_report.data.dhis2_api import AnyResponse, D2Api
 from d2_sync_report.domain.entities.instance import Instance
 
 
@@ -12,87 +12,88 @@ class ErrorMapping(TypedDict):
     suggestion: str
 
 
-def get_error_mappings_from_file(file_path: str) -> List[ErrorMapping]:
-    with open(file_path, "r") as file:
-        data = json.load(file)
+class D2LogsSuggestions:
+    instance: Instance
+    api: D2Api
+    error_mappings: List[ErrorMapping]
 
-    return data.get("mappings", [])
+    def __init__(self, api: D2Api):
+        self.api = api
+        self.instance = api.instance
+        self.error_mappings = self._get_error_mappings_from_file("suggestions.json")
 
+    def get_suggestions_from_error(self, error: str) -> List[str]:
+        extra_variables = dict(base_url=self.instance.url.rstrip("/"))
+        suggestions: List[str] = []
 
-def extract_variables(template: str) -> re.Pattern[str]:
-    """
-    Converts a template like 'foo={bar}' into a regex with named groups.
-    """
-    escaped = re.escape(template)
-    for _literal_text, field_name, *_ in Formatter().parse(template):
-        if field_name:
-            # Replace simple placeholder ({var}) with regex group (?P<var>.+?)
-            escaped = escaped.replace(re.escape(f"{{{field_name}}}"), f"(?P<{field_name}>.+?)")
-    return re.compile(escaped)
+        for mapping in self.error_mappings:
+            variables = self._extract_variables_from_error_template(error, mapping)
+            if variables:
+                variables2 = self._get_object_mapping_program_variables(variables)
+                variables2.update(extra_variables)
+                suggestion = mapping["suggestion"].format(**variables2)
+                suggestions.append(suggestion)
 
+        return suggestions
 
-def extract_variables_from_error_template(
-    error_message: str, mapping: ErrorMapping
-) -> Optional[dict[str, str | Any]]:
-    regex = extract_variables(mapping["error"])
-    match = regex.search(error_message)
-    if not match:
-        return None
-    return match.groupdict()
+    ## Private methods
 
+    def _get_error_mappings_from_file(self, file_path: str) -> List[ErrorMapping]:
+        with open(file_path, "r") as file:
+            data = json.load(file)
 
-error_mappings = get_error_mappings_from_file("suggestions.json")
+        return data.get("mappings", [])
 
+    def _extract_variables(self, template: str) -> re.Pattern[str]:
+        """
+        Converts a template like 'foo={bar}' into a regex with named groups.
+        """
+        escaped = re.escape(template)
+        for _literal_text, field_name, _format_spec, _conversion in Formatter().parse(template):
+            if field_name:
+                # Replace simple placeholder ({var}) with regex group (?P<var>.+?)
+                escaped = escaped.replace(re.escape(f"{{{field_name}}}"), f"(?P<{field_name}>.+?)")
+        return re.compile(escaped)
 
-def get_suggestions_from_error(instance: Instance, error: str) -> List[str]:
-    extra_variables = dict(base_url=instance.url.rstrip("/"))
-    suggestions: List[str] = []
+    def _extract_variables_from_error_template(
+        self, error_message: str, mapping: ErrorMapping
+    ) -> Optional[dict[str, str | Any]]:
+        regex = self._extract_variables(mapping["error"])
+        match = regex.search(error_message)
+        if not match:
+            return None
+        return match.groupdict()
 
-    for mapping in error_mappings:
-        variables = extract_variables_from_error_template(error, mapping)
-        if variables:
-            variables2 = get_object_mapping_program_variables(instance, variables)
-            variables2.update(extra_variables)
-            suggestion = mapping["suggestion"].format(**variables2)
-            suggestions.append(suggestion)
+    def _get_object_mapping_program_variables(self, variables: dict[str, Any]) -> dict[str, Any]:
+        result = variables.copy()
 
-    return suggestions
+        for key, object_id in variables.items():
+            if not key.endswith("_id") or not isinstance(object_id, str):
+                continue
 
+            name_key = key.replace("_id", "_name")
+            if name_key in result:
+                continue
 
-def get_object_mapping_program_variables(
-    instance: Instance, variables: dict[str, Any]
-) -> dict[str, Any]:
-    result = variables.copy()
+            base_name = key[:-3]
+            camel_name = "".join(
+                word.capitalize() if i else word for i, word in enumerate(base_name.split("_"))
+            )
+            plural_name = camel_name + "s"
+            endpoint = f"/api/{plural_name}"
 
-    for key, object_id in variables.items():
-        if not key.endswith("_id") or not isinstance(object_id, str):
-            continue
+            response: Any = self.api.get(
+                path=endpoint,
+                response_model=AnyResponse,
+                params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
+            )
 
-        name_key = key.replace("_id", "_name")
-        if name_key in result:
-            continue
+            entities = response.get(plural_name, [])
+            print(f"Retrieved {len(entities)} entities for {object_id} from {endpoint}")
 
-        base_name = key[:-3]
-        camel_name = "".join(
-            word.capitalize() if i else word for i, word in enumerate(base_name.split("_"))
-        )
-        plural_name = camel_name + "s"
-        endpoint = f"/api/{plural_name}"
+            if entities and "name" in entities[0]:
+                result[name_key] = entities[0]["name"]
+            else:
+                result[name_key] = object_id
 
-        response: Any = dhis2_api.request(
-            instance,
-            method="GET",
-            path=endpoint,
-            response_model=dhis2_api.AnyResponse,
-            params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
-        )
-
-        entities = response.get(plural_name, [])
-        print(f"Retrieved {len(entities)} entities for {object_id} from {endpoint}")
-
-        if entities and "name" in entities[0]:
-            result[name_key] = entities[0]["name"]
-        else:
-            result[name_key] = object_id
-
-    return result
+        return result

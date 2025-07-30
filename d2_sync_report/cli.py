@@ -1,9 +1,10 @@
 import re
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Annotated, Optional
 import tyro
 from tyro.conf import arg
 
+from d2_sync_report.data.dhis2_api import D2Api
 from d2_sync_report.data.repositories.metadata_versioning_d2_repository import (
     MetadataVersioningD2Repository,
 )
@@ -42,13 +43,14 @@ class Args:
 def main() -> None:
     args = tyro.cli(Args)
     instance = get_instance(args)
+    api = D2Api(instance)
 
     SendSyncReportUseCase(
         SyncJobReportExecutionFileRepository(),
-        SyncJobReportD2Repository(instance, args.logs_folder_path),
-        MetadataVersioningD2Repository(),
-        UserD2Repository(instance),
-        MessageD2Repository(instance),
+        SyncJobReportD2Repository(api, args.logs_folder_path),
+        MetadataVersioningD2Repository(api),
+        UserD2Repository(api),
+        MessageD2Repository(api),
     ).execute(
         user_group_name_to_send=args.notify_user_group,
         skip_cache=args.ignore_cache,
@@ -57,8 +59,8 @@ def main() -> None:
 
 
 def log_args(args: Args) -> None:
-    obfuscated_auth = re.sub(r"[^:]", "*", args.auth) if args.auth else None
-    args_to_log = replace(args, auth=obfuscated_auth)
+    obfuscated_auth = re.sub(r"[^:]", "*", args.auth) if args.auth else "UNSET"
+    args_to_log = Args(**args.__dict__, auth=obfuscated_auth)
     print(args_to_log)
 
 

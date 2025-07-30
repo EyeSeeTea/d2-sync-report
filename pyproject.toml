@@ -16,7 +16,8 @@ dev = [
   "black",
   "pylint",
   "mypy",
-  "pytest"
+  "pytest",
+  "types-requests"
 ]
 
 [project.scripts]
@@ -40,3 +41,4 @@ features = ["dev"]
 cli = "python -m d2_sync_report.cli {args}"
 lint = "black d2_sync_report tests {args}"
 test = "pytest {args}"
+typecheck = "mypy d2_sync_report tests {args}"
