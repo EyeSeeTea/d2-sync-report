@@ -25,7 +25,9 @@ class D2JobReducers:
             return matcher.close_sync_job(success=True)
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
-        elif matcher.matches("Caused by:", section=False):
+        elif matcher.matches_caused_by():
+            return matcher.add_error(log_entry)
+        elif matcher.matches_error_detail():
             return matcher.add_error(log_entry)
         else:
             return state
@@ -48,7 +50,9 @@ class D2JobReducers:
             return matcher.close_sync_job(success=True)
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
-        elif matcher.matches("Caused by:", section=False):
+        elif matcher.matches_caused_by():
+            return matcher.add_error(log_entry)
+        elif matcher.matches_error_detail():
             return matcher.add_error(log_entry)
         else:
             return state
@@ -73,7 +77,9 @@ class D2JobReducers:
             return matcher.close_sync_job(success=True)
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
-        elif matcher.matches("Caused by:", section=False):
+        elif matcher.matches_caused_by():
+            return matcher.add_error(log_entry)
+        elif matcher.matches_error_detail():
             return matcher.add_error(log_entry)
         else:
             return state
@@ -92,7 +98,9 @@ class D2JobReducers:
             return matcher.close_sync_job(success=True)
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
-        elif matcher.matches("Caused by:", section=False):
+        elif matcher.matches_caused_by():
+            return matcher.add_error(log_entry)
+        elif matcher.matches_error_detail():
             return matcher.add_error(log_entry)
         else:
             return state
@@ -160,6 +168,12 @@ class LogEntryReducer:
 
     def matches_import_summaries(self):
         return "ImportSummary{" in self.log_entry.text
+
+    def matches_caused_by(self):
+        return "Caused by:" in self.log_entry.text
+
+    def matches_error_detail(self):
+        return "Detail: " in self.log_entry.text
 
     def parse_import_summaries(self):
         state = self.state

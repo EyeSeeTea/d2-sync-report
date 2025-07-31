@@ -3,6 +3,10 @@
     {
       "error": "object_id=\"{program_id}\" message=\"Program is not assigned to this Organisation Unit: {organisation_unit_id}\"",
       "suggestion": "Go to Maintenance App, click on section PROGRAM, search for program '{program_name}', edit, click on step [4] Acccess, search organisation unit '{organisation_unit_name}', select it, and save the program: {base_url}/dhis-web-maintenance/index.html#/edit/programSection/program/{program_id}"
+    },
+    {
+      "error": "Detail: Key (username)=({username}) already exists",
+      "suggestion": "User with username '{username}' already exists. Go to {base_url}/dhis-web-user/index.html and delete the user"
     }
   ]
 }

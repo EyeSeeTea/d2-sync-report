@@ -86,7 +86,9 @@ def test_tracker_programs_data_sync_error():
     report = reports[0]
     assert report.type == "trackerProgramsData"
     assert report.success is False
-    assert len(report.errors) == 1
+
+    assert len(report.errors) >= 1
+    assert len(report.suggestions) >= 1
 
     assert_string_from_parts(
         report.errors[0],
@@ -97,11 +99,25 @@ def test_tracker_programs_data_sync_error():
         ],
     )
 
-    assert len(report.suggestions) == 1
-
     assert (
         report.suggestions[0]
         == "Go to Maintenance App, click on section PROGRAM, search for program 'Mock Program', edit, click on step [4] Acccess, search organisation unit 'Mock Organisation Unit', select it, and save the program: https://mock-instance/dhis-web-maintenance/index.html#/edit/programSection/program/Gq942x50jWX"
+    )
+
+    ##
+
+    assert len(report.errors) >= 3
+    assert len(report.suggestions) >= 2
+
+    assert (
+        report.errors[1]
+        == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_userinfo_username"'
+    )
+    assert report.errors[2] == "Detail: Key (username)=(Claude.KWITONDA) already exists"
+
+    assert (
+        report.suggestions[1]
+        == "User with username 'Claude.KWITONDA' already exists. Go to https://mock-instance/dhis-web-user/index.html and delete the user"
     )
 
 
