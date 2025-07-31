@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 import base64
-from typing import Literal, Mapping, Optional, Type, TypeVar
+from typing import Any, Dict, Literal, Mapping, Optional, Type, TypeVar
 import requests
 from urllib.parse import urljoin
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from d2_sync_report.domain.entities.instance import Auth, Instance
 
@@ -33,6 +33,8 @@ class D2Api(ABC):
         data: Optional[Mapping[str, str]] = None,
     ) -> T:
         """Send a POST request to the DHIS2 API."""
+        data_size = len(data) if data else 0
+        print(f"POST {path} - params={params} - data={data_size} bytes")
         return self.request("POST", path, response_model, params, data)
 
     @abstractmethod
@@ -59,19 +61,13 @@ class D2ApiReal(D2Api):
     ) -> T:
         url = urljoin(self.instance.url, path)
         headers = get_headers(self.instance.auth)
-
-        print(f"{method} {url} - {params}" if params and method == "GET" else f"{method} {url}")
-
         response = requests.request(method, url, params=params, headers=headers, data=data)
 
         if not response.ok:
             print("Response body:", response.text)
             response.raise_for_status()
 
-        if response_model is AnyResponse:
-            return response.json()
-        else:
-            return response_model.model_validate(response.json())
+        return response_model.model_validate(response.json())
 
 
 def get_headers(auth: Auth) -> dict[str, str]:
@@ -85,5 +81,5 @@ def get_headers(auth: Auth) -> dict[str, str]:
         raise ValueError(f"Unsupported auth type: {auth.type}")
 
 
-class AnyResponse(BaseModel):
+class DictResponse(RootModel[Dict[str, Any]]):
     pass

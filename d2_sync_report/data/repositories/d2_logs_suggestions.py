@@ -3,7 +3,7 @@ import json
 from typing import Any, TypedDict, Optional, List
 from string import Formatter
 
-from d2_sync_report.data.dhis2_api import AnyResponse, D2Api
+from d2_sync_report.data.dhis2_api import DictResponse, D2Api
 from d2_sync_report.domain.entities.instance import Instance
 
 
@@ -82,11 +82,11 @@ class D2LogsSuggestions:
             plural_name = camel_name + "s"
             endpoint = f"/api/{plural_name}"
 
-            response: Any = self.api.get(
+            response = self.api.get(
                 path=endpoint,
-                response_model=AnyResponse,
+                response_model=DictResponse,
                 params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
-            )
+            ).root
 
             entities = response.get(plural_name, [])
             print(f"Retrieved {len(entities)} entities for {object_id} from {endpoint}")

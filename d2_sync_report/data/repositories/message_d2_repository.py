@@ -40,5 +40,5 @@ class MessageD2Repository(MessageRepository):
         self.api.post(
             path="/api/email/notification",
             data=data,
-            response_model=dhis2_api.AnyResponse,
+            response_model=dhis2_api.DictResponse,
         )

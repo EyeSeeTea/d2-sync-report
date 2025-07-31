@@ -1,11 +1,9 @@
 import os
 from datetime import datetime
-from typing import Literal, Mapping, Optional, Type
-from unittest.mock import Mock
+from typing import Optional
 
-from d2_sync_report.data.dhis2_api import T, D2Api
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
-from d2_sync_report.domain.entities.instance import Instance, PersonalTokenAccessAuth
+from tests.data.d2_api_mock import D2ApiMock, Expectations, MockRequest
 
 ## Aggregated data synchronization
 
@@ -52,7 +50,7 @@ def test_event_programs_data_sync_error():
         [
             'status="ERROR"',
             'object_id="Gq942x50jWX"',
-            'message="Program is not assigned to this Organisation Unit: ldZyp3zdLOL"',
+            'message="Program is not assigned to this Organisation Unit: WA5iEXjqCnS"',
         ],
     )
 
@@ -82,17 +80,7 @@ def test_tracker_programs_data_sync_success():
 
 def test_tracker_programs_data_sync_error():
     repository = get_repo(folder="tracker-programs-data-sync-error")
-
-    api.mock_request.return_value = {"programs": []}
-
     reports = repository.get().items
-
-    # api.mock_request.assert_called_once_with(
-    #    "GET",
-    #    "/api/programs",
-    #    AnyResponse,
-    #    [("fields", "id,name"), ("filter", "id:eq:Gq942x50jWX")],
-    # )
 
     assert len(reports) == 1
     report = reports[0]
@@ -107,6 +95,13 @@ def test_tracker_programs_data_sync_error():
             'object_id="Gq942x50jWX"',
             'message="Program is not assigned to this Organisation Unit: WA5iEXjqCnS"',
         ],
+    )
+
+    assert len(report.suggestions) == 1
+
+    assert (
+        report.suggestions[0]
+        == "Go to Maintenance App, click on section PROGRAM, search for program 'Mock Program', edit, click on step [4] Acccess, search organisation unit 'Mock Organisation Unit', select it, and save the program: https://mock-instance/dhis-web-maintenance/index.html#/edit/programSection/program/Gq942x50jWX"
     )
 
 
@@ -161,31 +156,23 @@ def get_log_folder(folder: str) -> str:
     return os.path.join(os.path.dirname(__file__), "logs", folder)
 
 
-class D2ApiMock(D2Api):
-    def __init__(self):
-        mock_instance = Instance(
-            url="https://mock-instance",
-            auth=PersonalTokenAccessAuth(token="NOT_USED"),
-        )
-        super().__init__(instance=mock_instance)
-        self.mock_request = Mock()
-
-    def request(
-        self,
-        method: Literal["GET", "POST"],
-        path: str,
-        response_model: Type[T],
-        params: Optional[list[tuple[str, str]]] = None,
-        data: Optional[Mapping[str, str]] = None,
-    ) -> T:
-        return self.mock_request(method, path, response_model, params, data)
-
-    # We can define helper methods to declaratively set expectations
-
-
-api = D2ApiMock()
-
-
-def get_repo(folder: str):
+def get_repo(folder: str, expectations: Optional[Expectations] = None) -> D2LogsParser:
     log_path = get_log_folder(folder)
+    api = D2ApiMock(expectations=expectations or metadata_requests)
     return D2LogsParser(api, logs_folder_path=log_path)
+
+
+metadata_requests = [
+    MockRequest(
+        method="GET",
+        path="/api/programs",
+        params=[("fields", "id,name"), ("filter", "id:eq:Gq942x50jWX")],
+        response={"programs": [{"id": "Gq942x50jWX", "name": "Mock Program"}]},
+    ),
+    MockRequest(
+        method="GET",
+        path="/api/organisationUnits",
+        params=[("fields", "id,name"), ("filter", "id:eq:WA5iEXjqCnS")],
+        response={"organisationUnits": [{"id": "WA5iEXjqCnS", "name": "Mock Organisation Unit"}]},
+    ),
+]
