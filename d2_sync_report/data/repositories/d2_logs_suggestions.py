@@ -27,11 +27,10 @@ class D2LogsSuggestions:
         suggestions: List[str] = []
 
         for mapping in self.error_mappings:
-            variables = self._extract_variables_from_error_template(error, mapping)
-            if variables:
-                variables2 = self._get_object_mapping_program_variables(variables)
-                variables2.update(extra_variables)
-                suggestion = mapping["suggestion"].format(**variables2)
+            if (variables := self._extract_variables_from_template(error, mapping)) is not None:
+                object_variables = self._get_object_mapping_program_variables(variables)
+                object_variables.update(extra_variables)
+                suggestion = mapping["suggestion"].format(**object_variables)
                 suggestions.append(suggestion)
 
         return suggestions
@@ -51,11 +50,13 @@ class D2LogsSuggestions:
         escaped = re.escape(template)
         for _literal_text, field_name, _format_spec, _conversion in Formatter().parse(template):
             if field_name:
-                # Replace friendly placeholder {var} with regex group (?P<var>.+?)
-                escaped = escaped.replace(re.escape(f"{{{field_name}}}"), f"(?P<{field_name}>.+?)")
+                # Replace friendly placeholder {var} with regex group (?P<var>)
+                escaped = escaped.replace(
+                    re.escape(f"{{{field_name}}}"), f"(?P<{field_name}>[\\w.]+)"
+                )
         return re.compile(escaped)
 
-    def _extract_variables_from_error_template(
+    def _extract_variables_from_template(
         self, error_message: str, mapping: ErrorMapping
     ) -> Optional[dict[str, str | Any]]:
         regex = self._extract_variables(mapping["error"])

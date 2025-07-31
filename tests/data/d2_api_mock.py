@@ -30,7 +30,6 @@ mock_instance = Instance(
 
 
 class D2ApiMock(D2Api):
-
     def __init__(self, expectations: Expectations):
         self.expectations = expectations
         super().__init__(instance=mock_instance)

@@ -135,6 +135,36 @@ def test_tracker_programs_data_sync_error():
         == "Go to Maintenance App, click on section DATA SET, search for data set 'Mock Data Set', edit, click on button DATA INPUT PERIODS, add period '2025W27`, close the window and save the data set: https://mock-instance/dhis-web-maintenance/index.html#/edit/dataSetSection/dataSet/h3zkiErOoFl"
     )
 
+    ##
+
+    assert len(report.errors) >= 5
+    assert len(report.suggestions) >= 4
+
+    assert (
+        report.errors[4]
+        == """status="ERROR" object_id="HFxbAFNOYqb" message="WVq6Gnf3Qvq:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk=ImportConflict{error:WVq6Gnf3Qvq, message:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk}\""""
+    )
+
+    assert (
+        report.suggestions[3]
+        == "Go to Maintenance App, click on section OTHER, then `Option set` in the left sidebar, search for option set 'Mock Option Set', edit, click on tab OPTIONS, and add an option with code 'kenema_other_chiefdoms_outside_kenema_district_itf': https://mock-instance/dhis-web-maintenance/index.html#/edit/otherSection/optionSet/CTZmCZx5nOk/options"
+    )
+
+    ##
+
+    assert len(report.errors) >= 6
+    assert len(report.suggestions) >= 5
+
+    assert (
+        report.errors[5]
+        == """status="WARNING" object_id="null" message="Import process completed successfully E7613:zUs1ja0c8zT=ImportConflict{error:E7613, message:Category option combo not found or not accessible for writing data: `zUs1ja0c8zT`}\""""
+    )
+
+    assert (
+        report.suggestions[4]
+        == "Category option combo `CategoryOption1, CategoryOption2` [zUs1ja0c8zT] does not exist on the remote server or the sync user has no rights to write data to it. A category option combo has no sharings, it's inherited from its category options, so we need to update these sharings. Note that you will need also the clear the application cache for new sharing to apply. Steps: 1) Go to Maintenance App, click on section CATEGORY, then `Category option` in the left sidebar, and search for all the category options ('CategoryOption1, CategoryOption2'), double-click, Sharing Settings, set Data -> Can Capture and view for the sync user: https://mock-instance/dhis-web-maintenance/index.html#/edit/categorySection/categoryOption. 2) Go to the Data Administration App, section Maintenance, check Clear application cache and click Perform maintenance."
+    )
+
 
 ## Metadata synchronization
 
@@ -189,11 +219,11 @@ def get_log_folder(folder: str) -> str:
 
 def get_repo(folder: str, expectations: Optional[Expectations] = None) -> D2LogsParser:
     log_path = get_log_folder(folder)
-    api = D2ApiMock(expectations=expectations or metadata_requests)
+    api = D2ApiMock(expectations or mocked_metadata_requests)
     return D2LogsParser(api, logs_folder_path=log_path)
 
 
-metadata_requests = [
+mocked_metadata_requests = [
     MockRequest(
         method="GET",
         path="/api/programs",
@@ -205,6 +235,22 @@ metadata_requests = [
         path="/api/dataSets",
         params=[("fields", "id,name"), ("filter", "id:eq:h3zkiErOoFl")],
         response={"dataSets": [{"id": "h3zkiErOoFl", "name": "Mock Data Set"}]},
+    ),
+    MockRequest(
+        method="GET",
+        path="/api/optionSets",
+        params=[("fields", "id,name"), ("filter", "id:eq:CTZmCZx5nOk")],
+        response={"optionSets": [{"id": "CTZmCZx5nOk", "name": "Mock Option Set"}]},
+    ),
+    MockRequest(
+        method="GET",
+        path="/api/categoryOptionCombos",
+        params=[("fields", "id,name"), ("filter", "id:eq:zUs1ja0c8zT")],
+        response={
+            "categoryOptionCombos": [
+                {"id": "zUs1ja0c8zT", "name": "CategoryOption1, CategoryOption2"}
+            ]
+        },
     ),
     MockRequest(
         method="GET",
