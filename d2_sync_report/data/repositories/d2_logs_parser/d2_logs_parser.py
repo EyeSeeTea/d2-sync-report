@@ -79,7 +79,6 @@ class D2LogsParser:
         all_log_files = sorted(
             rotated_log_files,
             key=lambda filename: int(filename[len("dhis.log.") :]),
-            reverse=True,
         ) + ["dhis.log"]
 
         return [os.path.join(self.logs_folder_path, log_file) for log_file in all_log_files]
