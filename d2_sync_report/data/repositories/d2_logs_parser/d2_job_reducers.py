@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from typing import List
 from d2_sync_report.data.repositories.d2_logs_parser.import_summaries import parse_import_summaries
 from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
     SyncJobParserInProgress,
@@ -8,113 +10,115 @@ from d2_sync_report.domain.entities.sync_job_report import SyncJobReportItem, Sy
 from d2_sync_report.utils.uniq import uniq
 
 
+@dataclass
+class Delimiters:
+    """
+    Patters that identify the start and end (success or error) of sync jobs.
+    To be used in the generic sync reducer.
+    """
+
+    open: List[str]
+    close_success: List[str]
+    close_error: List[str]
+
+
 class D2JobReducers:
     def data_sync_reducer(
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="DATA_SYNC")
-        type = SyncJobType.AGGREGATED
 
-        if matcher.matches("Starting DataValueSynchronization job", section=True):
-            return matcher.open_sync_job(type=type)
-        elif not state.current or state.current.type != type:
-            return state
-        elif matcher.matches("DataValueSynchronization failed", section=True):
-            return matcher.close_sync_job(success=False)
-        elif matcher.matches("Process completed after", section=True):
-            return matcher.close_sync_job(success=True)
-        elif matcher.matches_import_summaries():
-            return matcher.parse_import_summaries()
-        elif matcher.matches_caused_by():
-            return matcher.add_error(log_entry)
-        elif matcher.matches_error_detail():
-            return matcher.add_error(log_entry)
-        else:
-            return state
+        delimiters = Delimiters(
+            open=["Starting DataValueSynchronization job"],
+            close_success=["Process completed after"],
+            close_error=["DataValueSynchronization failed"],
+        )
+
+        return self._generic_sync_reducer(state, matcher, SyncJobType.AGGREGATED, delimiters)
 
     def event_programs_reducer(
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="EVENT_PROGRAMS_DATA_SYNC")
-        type = SyncJobType.EVENT_PROGRAMS
 
-        if matcher.matches("Starting Event programs data synchronization", section=True):
-            return matcher.open_sync_job(type=type)
-        elif not state.current or state.current.type != type:
-            return state
-        elif matcher.matches("Event programs data synchronization failed", section=True):
-            return matcher.close_sync_job(success=False)
-        elif matcher.matches("Event programs data synchronization skipped", section=True):
-            return matcher.close_sync_job(success=True)
-        elif matcher.matches("Event programs data sync was successfully done", section=True):
-            return matcher.close_sync_job(success=True)
-        elif matcher.matches_import_summaries():
-            return matcher.parse_import_summaries()
-        elif matcher.matches_caused_by():
-            return matcher.add_error(log_entry)
-        elif matcher.matches_error_detail():
-            return matcher.add_error(log_entry)
-        else:
-            return state
+        delimiters = Delimiters(
+            open=["Starting Event programs data synchronization"],
+            close_success=[
+                "Event programs data sync was successfully done",
+                "Event programs data synchronization skipped",
+            ],
+            close_error=["Event programs data synchronization failed"],
+        )
+
+        return self._generic_sync_reducer(state, matcher, SyncJobType.EVENT_PROGRAMS, delimiters)
 
     def tracker_programs_reducer(
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="TRACKER_PROGRAMS_DATA_SYNC")
-        type = SyncJobType.TRACKER_PROGRAMS
 
-        if matcher.matches("Starting Tracker programs data synchronization", section=True):
-            return matcher.open_sync_job(type=type)
-        elif not state.current or state.current.type != type:
-            return state
-        elif matcher.matches("Tracker programs data synchronization failed", section=True):
-            return matcher.close_sync_job(success=False)
-        elif matcher.matches("Tracker programs data synchronization skipped", section=True):
-            return matcher.close_sync_job(success=True)
-        elif matcher.matches(
-            "Tracker programs data synchronization was successfully done", section=True
-        ):
-            return matcher.close_sync_job(success=True)
-        elif matcher.matches_import_summaries():
-            return matcher.parse_import_summaries()
-        elif matcher.matches_caused_by():
-            return matcher.add_error(log_entry)
-        elif matcher.matches_error_detail():
-            return matcher.add_error(log_entry)
-        else:
-            return state
+        delimiters = Delimiters(
+            open=["Starting Tracker programs data synchronization"],
+            close_success=[
+                "Tracker programs data synchronization was successfully done",
+                "Tracker programs data synchronization skipped",
+            ],
+            close_error=["Tracker programs data synchronization failed"],
+        )
+        return self._generic_sync_reducer(state, matcher, SyncJobType.TRACKER_PROGRAMS, delimiters)
 
     def metadata_sync_reducer(
         self, state: SyncJobParserState, log_entry: LogEntry
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="META_DATA_SYNC")
-        type = SyncJobType.METADATA
 
-        if matcher.matches("Metadata Sync cron Job started", section=False):
+        delimiters = Delimiters(
+            open=["Metadata Sync cron Job started"],
+            close_success=["Metadata sync cron job ended"],
+            close_error=[],
+        )
+
+        return self._generic_sync_reducer(
+            state, matcher, SyncJobType.METADATA, delimiters, section=False
+        )
+
+    # Logs parsing is very similar for all syncs, just some tags and the start/close delimiters change.
+    # So, to keep it DRY, let's create a generic reducer that can handle all sync jobs.
+    def _generic_sync_reducer(
+        self,
+        state: SyncJobParserState,
+        matcher: "LogEntryReducer",
+        type: SyncJobType,
+        delimiters: Delimiters,
+        section: bool = True,
+    ) -> SyncJobParserState:
+        if any(matcher.matches(open, section) for open in delimiters.open):
             return matcher.open_sync_job(type=type)
         elif not state.current or state.current.type != type:
             return state
-        elif matcher.matches("Metadata sync cron job ended", section=False):
+        elif any(matcher.matches(close, section) for close in delimiters.close_success):
             return matcher.close_sync_job(success=True)
+        elif any(matcher.matches(close, section) for close in delimiters.close_error):
+            return matcher.close_sync_job(success=False)
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
         elif matcher.matches_caused_by():
-            return matcher.add_error(log_entry)
+            return matcher.add_error()
         elif matcher.matches_error_detail():
-            return matcher.add_error(log_entry)
+            return matcher.add_error()
         else:
             return state
 
 
 class LogEntryReducer:
     """
-    Encapsulate the logic for processing log entries and managing the state of sync jobs.
+    Encapsulate the logic to process log entries and manage the state of sync jobs.
 
     Matches can include the section or not. Example for Metadata synchronization::
 
        * INFO  2025-07-21T11:47:28,307 [META_DATA_SYNC aBcD9Zo0xrG] Process started
 
-    This way we can match against a specific section.
+    This way we can match against a specific job types.
     """
 
     def __init__(self, state: SyncJobParserState, log_entry: LogEntry, section: str):
@@ -188,5 +192,5 @@ class LogEntryReducer:
 
         return state.add_errors(errors)
 
-    def add_error(self, entry: LogEntry):
-        return self.state.add_errors([entry.text])
+    def add_error(self):
+        return self.state.add_errors([self.log_entry.text])
