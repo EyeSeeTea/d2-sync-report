@@ -117,7 +117,22 @@ def test_tracker_programs_data_sync_error():
 
     assert (
         report.suggestions[1]
-        == "User with username 'Claude.KWITONDA' already exists. Go to https://mock-instance/dhis-web-user/index.html and delete the user"
+        == "User with username 'Claude.KWITONDA' already exists. Go to https://mock-instance/dhis-web-user/index.html#/users?query=Claude.KWITONDA and delete the user"
+    )
+
+    ##
+
+    assert len(report.errors) >= 4
+    assert len(report.suggestions) >= 3
+
+    assert (
+        report.errors[3]
+        == 'status="WARNING" object_id="null" message="Import process completed successfully E7643:2025W27:h3zkiErOoFl=ImportConflict{error:E7643, message:Period: `2025W27` is not open for this data set at this time: `h3zkiErOoFl`}"'
+    )
+
+    assert (
+        report.suggestions[2]
+        == "Go to Maintenance App, click on section DATA SET, search for data set 'Mock Data Set', edit, click on button DATA INPUT PERIODS, add period '2025W27`, close the window and save the data set: https://mock-instance/dhis-web-maintenance/index.html#/edit/dataSetSection/dataSet/h3zkiErOoFl"
     )
 
 
@@ -184,6 +199,12 @@ metadata_requests = [
         path="/api/programs",
         params=[("fields", "id,name"), ("filter", "id:eq:Gq942x50jWX")],
         response={"programs": [{"id": "Gq942x50jWX", "name": "Mock Program"}]},
+    ),
+    MockRequest(
+        method="GET",
+        path="/api/dataSets",
+        params=[("fields", "id,name"), ("filter", "id:eq:h3zkiErOoFl")],
+        response={"dataSets": [{"id": "h3zkiErOoFl", "name": "Mock Data Set"}]},
     ),
     MockRequest(
         method="GET",

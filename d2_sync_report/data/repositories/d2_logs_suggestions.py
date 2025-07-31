@@ -51,7 +51,7 @@ class D2LogsSuggestions:
         escaped = re.escape(template)
         for _literal_text, field_name, _format_spec, _conversion in Formatter().parse(template):
             if field_name:
-                # Replace simple placeholder ({var}) with regex group (?P<var>.+?)
+                # Replace friendly placeholder {var} with regex group (?P<var>.+?)
                 escaped = escaped.replace(re.escape(f"{{{field_name}}}"), f"(?P<{field_name}>.+?)")
         return re.compile(escaped)
 
@@ -60,9 +60,7 @@ class D2LogsSuggestions:
     ) -> Optional[dict[str, str | Any]]:
         regex = self._extract_variables(mapping["error"])
         match = regex.search(error_message)
-        if not match:
-            return None
-        return match.groupdict()
+        return match.groupdict() if match else None
 
     def _get_object_mapping_program_variables(self, variables: dict[str, Any]) -> dict[str, Any]:
         result = variables.copy()

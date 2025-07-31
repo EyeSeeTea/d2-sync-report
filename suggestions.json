@@ -6,7 +6,11 @@
     },
     {
       "error": "Detail: Key (username)=({username}) already exists",
-      "suggestion": "User with username '{username}' already exists. Go to {base_url}/dhis-web-user/index.html and delete the user"
+      "suggestion": "User with username '{username}' already exists. Go to {base_url}/dhis-web-user/index.html#/users?query={username} and delete the user"
+    },
+    {
+      "error": "Period: `{period}` is not open for this data set at this time: `{data_set_id}`",
+      "suggestion": "Go to Maintenance App, click on section DATA SET, search for data set '{data_set_name}', edit, click on button DATA INPUT PERIODS, add period '{period}`, close the window and save the data set: {base_url}/dhis-web-maintenance/index.html#/edit/dataSetSection/dataSet/{data_set_id}"
     }
   ]
 }

@@ -10,8 +10,10 @@
 
 * ERROR 2025-07-17T12:38:09,837 Sync against endpoint: EVENTS failed: ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='Program is not assigned to this Organisation Unit: WA5iEXjqCnS', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='Gq942x50jWX', href='null'}]} (SyncUtils.java [taskScheduler-19])
 
-* INFO  2025-07-16T13:22:18,522 Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_userinfo_username"
+* ERROR  2025-07-16T13:22:18,522 Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_userinfo_username"
   Detail: Key (username)=(Claude.KWITONDA) already exists
+
+* ERROR 2025-07-17T12:38:09,837 Sync against endpoint DATA_VALUE_SETS failed. ImportSummary: ImportSummary{status=WARNING, description='Import process completed successfully', importCount=[imports=926, updates=0, ignores=74], conflicts={E7643:2025W27:h3zkiErOoFl=ImportConflict{error:E7643, message:Period: `2025W27` is not open for this data set at this time: `h3zkiErOoFl`}}, dataSetComplete='false', reference='null', href='null'} (SyncUtils.java [taskScheduler-11])
 
 * INFO  2025-07-17T12:38:09,837 Tracker programs data synchronization skipped. No new or updated TEIs found. (NotificationLoggerUtil.java [taskScheduler-24])
 * INFO  2025-07-17T12:38:09,837 [TRACKER_PROGRAMS_DATA_SYNC AqujRwbbik6] Process completed after 0.109s: Tracker programs data synchronization skipped. No new or updated TEIs found. (ControlledJobProgress.java [taskScheduler-24])
