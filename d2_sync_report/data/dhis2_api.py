@@ -11,26 +11,24 @@ from d2_sync_report.domain.entities.instance import Auth, Instance
 T = TypeVar("T", bound=BaseModel)
 
 
+Params = Optional[list[tuple[str, str]]]
+
+Data = Optional[Mapping[str, str]]
+
+Method = Literal["GET", "POST"]
+
+
 class D2Api(ABC):
     def __init__(self, instance: Instance):
         self.instance = instance
 
-    def get(
-        self,
-        path: str,
-        response_model: Type[T],
-        params: Optional[list[tuple[str, str]]] = None,
-    ) -> T:
+    def get(self, path: str, response_model: Type[T], params: Params = None) -> T:
         """Send a GET request to the DHIS2 API."""
         print(f"GET {path} - {params}")
         return self.request("GET", path, response_model, params)
 
     def post(
-        self,
-        path: str,
-        response_model: Type[T],
-        params: Optional[list[tuple[str, str]]] = None,
-        data: Optional[Mapping[str, str]] = None,
+        self, path: str, response_model: Type[T], params: Params = None, data: Data = None
     ) -> T:
         """Send a POST request to the DHIS2 API."""
         data_size = len(data) if data else 0
@@ -40,11 +38,11 @@ class D2Api(ABC):
     @abstractmethod
     def request(
         self,
-        method: Literal["GET", "POST"],
+        method: Method,
         path: str,
         response_model: Type[T],
-        params: Optional[list[tuple[str, str]]] = None,
-        data: Optional[Mapping[str, str]] = None,
+        params: Params = None,
+        data: Data = None,
     ) -> T:
         """Send a request to the DHIS2 API."""
         pass
@@ -56,8 +54,8 @@ class D2ApiReal(D2Api):
         method: Literal["GET", "POST"],
         path: str,
         response_model: Type[T],
-        params: Optional[list[tuple[str, str]]] = None,
-        data: Optional[Mapping[str, str]] = None,
+        params: Params = None,
+        data: Data = None,
     ) -> T:
         url = urljoin(self.instance.url, path)
         headers = get_headers(self.instance.auth)
