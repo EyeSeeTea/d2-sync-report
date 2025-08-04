@@ -106,27 +106,26 @@ def test_tracker_programs_data_sync_error():
 
     ##
 
-    assert len(report.errors) >= 3
+    assert len(report.errors) >= 2
     assert len(report.suggestions) >= 2
 
     assert (
         report.errors[1]
-        == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_userinfo_username"'
+        == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_userinfo_username" - Detail: Key (username)=(Claude.KWITONDA) already exists'
     )
-    assert report.errors[2] == "Detail: Key (username)=(Claude.KWITONDA) already exists"
 
     assert (
         report.suggestions[1]
-        == "User with username 'Claude.KWITONDA' already exists. Go to https://mock-instance/dhis-web-user/index.html#/users?query=Claude.KWITONDA and delete the user"
+        == "User with username 'Claude.KWITONDA' already exists. Go to https://mock-instance/dhis-web-user/index.html#/users?query=Claude.KWITONDA and delete it"
     )
 
     ##
 
-    assert len(report.errors) >= 4
+    assert len(report.errors) >= 3
     assert len(report.suggestions) >= 3
 
     assert (
-        report.errors[3]
+        report.errors[2]
         == 'status="WARNING" object_id="null" message="Import process completed successfully E7643:2025W27:h3zkiErOoFl=ImportConflict{error:E7643, message:Period: `2025W27` is not open for this data set at this time: `h3zkiErOoFl`}"'
     )
 
@@ -137,11 +136,11 @@ def test_tracker_programs_data_sync_error():
 
     ##
 
-    assert len(report.errors) >= 5
+    assert len(report.errors) >= 4
     assert len(report.suggestions) >= 4
 
     assert (
-        report.errors[4]
+        report.errors[3]
         == """status="ERROR" object_id="HFxbAFNOYqb" message="WVq6Gnf3Qvq:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk=ImportConflict{error:WVq6Gnf3Qvq, message:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk}\""""
     )
 
@@ -152,17 +151,39 @@ def test_tracker_programs_data_sync_error():
 
     ##
 
-    assert len(report.errors) >= 6
+    assert len(report.errors) >= 5
     assert len(report.suggestions) >= 5
 
     assert (
-        report.errors[5]
+        report.errors[4]
         == """status="WARNING" object_id="null" message="Import process completed successfully E7613:zUs1ja0c8zT=ImportConflict{error:E7613, message:Category option combo not found or not accessible for writing data: `zUs1ja0c8zT`}\""""
     )
 
+    assert_suggestion(
+        report.suggestions[4],
+        [
+            "Category option combo `CategoryOption1, CategoryOption2`",
+            "zUs1ja0c8zT",
+            "does not exist",
+            "Sharing Settings",
+            "/dhis-web-maintenance/index.html#/edit/categorySection/categoryOption",
+            "Clear application cache",
+        ],
+    )
+
+    ##
+
+    assert len(report.errors) >= 6
+    assert len(report.suggestions) >= 6
+
     assert (
-        report.suggestions[4]
-        == "Category option combo `CategoryOption1, CategoryOption2` [zUs1ja0c8zT] does not exist on the remote server or the sync user has no rights to write data to it. A category option combo has no sharings, it's inherited from its category options, so we need to update these sharings. Note that you will need also the clear the application cache for new sharing to apply. Steps: 1) Go to Maintenance App, click on section CATEGORY, then `Category option` in the left sidebar, and search for all the category options ('CategoryOption1, CategoryOption2'), double-click, Sharing Settings, set Data -> Can Capture and view for the sync user: https://mock-instance/dhis-web-maintenance/index.html#/edit/categorySection/categoryOption. 2) Go to the Data Administration App, section Maintenance, check Clear application cache and click Perform maintenance."
+        report.errors[5]
+        == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_t94h9p111tcydbm6je22tla52" - Detail: Key (uid)=(h3kTURQ3vV8) already exists'
+    )
+
+    assert_suggestion(
+        report.suggestions[5],
+        ["DHIS2-12887", "delete the comment", "mock_container psql"],
     )
 
 
@@ -221,6 +242,17 @@ def get_repo(folder: str, expectations: Optional[Expectations] = None) -> D2Logs
     log_path = get_log_folder(folder)
     api = D2ApiMock(expectations or mocked_metadata_requests)
     return D2LogsParser(api, logs_folder_path=log_path)
+
+
+def assert_suggestion(actual: str, expected_words: list[str]):
+    """
+    Assert that expected words exist verbatim in a string.
+
+    Asserting exact string equality for error messages are hard to maintain, let's
+    check instead that some key words are present in the actual string.
+    """
+    for word in expected_words:
+        assert word in actual, f"Expected word '{word}' not found in '{actual}'"
 
 
 mocked_metadata_requests = [

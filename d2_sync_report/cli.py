@@ -34,6 +34,10 @@ class Args:
     ]
     url: Annotated[str, arg(help="DHIS2 instance base URL", metavar="URL")]
     auth: Annotated[str, arg(help="USER:PASS or PAT token", metavar="AUTH")]
+    docker_container: Annotated[
+        Optional[str],
+        arg(help="Docker container running in the instance", metavar="NAME"),
+    ] = None
     ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
     notify_user_group: Annotated[
         Optional[str], arg(help="User group to send the report to", metavar="NAME or CODE")
@@ -71,12 +75,14 @@ def get_instance(args: Args) -> Instance:
         return Instance(
             url=args.url,
             auth=PersonalTokenAccessAuth(token=args.auth),
+            docker_container=args.docker_container,
         )
     elif ":" in args.auth:
         username, password = args.auth.split(":", 1)
         return Instance(
             url=args.url,
             auth=BasicAuth(type="basic", username=username, password=password),
+            docker_container=args.docker_container,
         )
     else:
         raise ValueError("Invalid auth format")

@@ -1,8 +1,10 @@
-from dataclasses import dataclass, replace
 import os
+import re
+from dataclasses import dataclass, replace
 from datetime import datetime
 from functools import reduce
 from typing import Iterator, List, Optional, Tuple
+
 from d2_sync_report.data.dhis2_api import D2Api
 from d2_sync_report.data.repositories.d2_logs_parser.d2_job_reducers import D2JobReducers
 from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
@@ -13,21 +15,18 @@ from d2_sync_report.data.repositories.d2_logs_suggestions import (
     D2LogsSuggestions,
 )
 from d2_sync_report.domain.entities.sync_job_report import SyncJobReport, SyncJobReportItem
-import re
-
 from d2_sync_report.utils.uniq import uniq
 
 """
 This class parses the DHIS2 logs to extract synchronization job reports.
 
-As we have a single log file that aggregates all the actions and job synchronizations
-in the instance, we need to separate the job parsing. Some log lines can be discriminated,
-using the section (e.g. "EVENT_PROGRAMS_DATA_SYNC", "TRACKER_PROGRAMS_DATA_SYNC", "META_DATA_SYNC"),
-but others (like low-level error messages) are not tagged with any section. 
+As we have a single log file that aggregates any action in the instance, we'd like the ability to 
+isolate which sync job they belong to. Some log lines can indeed be fully discriminated,
+using the section (e.g. "EVENT_PROGRAMS_DATA_SYNC"), but others (like low-level error messages)
+are not tagged.
 
 The repository uses a state machine approach to parse the logs, where it keeps track
-of the current synchronization job and its state. It processes each log entry,
-and based on the content of the log entry, it updates the state accordingly.
+of the current synchronization job and its state.
 """
 
 
@@ -48,6 +47,8 @@ class D2LogsParser:
                 yield from self._get_log_entries(log_file, since)
 
         (items, last_processed) = self._get_log_report_items(get_log_entries())
+
+        self.d2_logs_suggestions.copy_resources()
 
         return SyncJobReport(
             items=self._add_suggestions(items),
@@ -144,7 +145,7 @@ class D2LogsParser:
             return LogEntry(timestamp=timestamp, text=" ".join(parts[3:]))
 
 
-# Support types in static method, with importing...
+reducers = D2JobReducers()
 
 
 @dataclass
@@ -156,7 +157,6 @@ class ReducersState:
 
     @staticmethod
     def reducer(state: "ReducersState", log_entry: LogEntry) -> "ReducersState":
-        reducers = D2JobReducers()
         state1 = reducers.data_sync_reducer(state.data_sync_state, log_entry)
         state2 = reducers.event_programs_reducer(state.event_programs_state, log_entry)
         state3 = reducers.tracker_programs_reducer(state.tracker_programs_state, log_entry)

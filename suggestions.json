@@ -4,18 +4,27 @@
       "error": "object_id=\"{program_id}\" message=\"Program is not assigned to this Organisation Unit: {organisation_unit_id}\"",
       "suggestion": "Go to Maintenance App, click on section PROGRAM, search for program '{program_name}', edit, click on step [4] Acccess, search organisation unit '{organisation_unit_name}', select it, and save the program: {base_url}/dhis-web-maintenance/index.html#/edit/programSection/program/{program_id}"
     },
+
     {
       "error": "Detail: Key (username)=({username}) already exists",
-      "suggestion": "User with username '{username}' already exists. Go to {base_url}/dhis-web-user/index.html#/users?query={username} and delete the user"
+      "suggestion": "User with username '{username}' already exists. Go to {base_url}/dhis-web-user/index.html#/users?query={username} and delete it"
     },
+
+    {
+      "error": "duplicate key value violates unique constraint \"{psql_constraint}\" - Detail: Key (uid)=({note_uid}) already exists",
+      "suggestion": "Due to a known DHIS2 bug [DHIS2-12887], tracked entities, enrollments, and events that include comments/notes (via the 'Comments about this enrollment' widget) fail to sync after being created on the server. To resolve this issue, you need to delete the comment by running the following command: `docker exec -i {docker_container} psql -U dhis dhis --set=constraint_name='{psql_constraint}' --set=uid_to_delete='{note_uid}' < {resources_folder}/delete-tracker-note.sql`"
+    },
+
     {
       "error": "Period: `{period}` is not open for this data set at this time: `{data_set_id}`",
       "suggestion": "Go to Maintenance App, click on section DATA SET, search for data set '{data_set_name}', edit, click on button DATA INPUT PERIODS, add period '{period}`, close the window and save the data set: {base_url}/dhis-web-maintenance/index.html#/edit/dataSetSection/dataSet/{data_set_id}"
     },
+
     {
       "error": "Value '{option_code}' is not a valid option code of option set: {option_set_id}",
       "suggestion": "Go to Maintenance App, click on section OTHER, then `Option set` in the left sidebar, search for option set '{option_set_name}', edit, click on tab OPTIONS, and add an option with code '{option_code}': {base_url}/dhis-web-maintenance/index.html#/edit/otherSection/optionSet/{option_set_id}/options"
     },
+
     {
       "error": "Category option combo not found or not accessible for writing data: `{category_option_combo_id}`",
       "suggestion": "Category option combo `{category_option_combo_name}` [{category_option_combo_id}] does not exist on the remote server or the sync user has no rights to write data to it. A category option combo has no sharings, it's inherited from its category options, so we need to update these sharings. Note that you will need also the clear the application cache for new sharing to apply. Steps: 1) Go to Maintenance App, click on section CATEGORY, then `Category option` in the left sidebar, and search for all the category options ('{category_option_combo_name}'), double-click, Sharing Settings, set Data -> Can Capture and view for the sync user: {base_url}/dhis-web-maintenance/index.html#/edit/categorySection/categoryOption. 2) Go to the Data Administration App, section Maintenance, check Clear application cache and click Perform maintenance."

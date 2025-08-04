@@ -92,20 +92,24 @@ class D2JobReducers:
         delimiters: Delimiters,
         section: bool = True,
     ) -> SyncJobParserState:
+        # Search for starter string (i.e: "Starting Tracker programs data synchronization job")
         if any(matcher.matches(open, section) for open in delimiters.open):
             return matcher.open_sync_job(type=type)
         elif not state.current or state.current.type != type:
             return state
+        # Search for success closer string (i.e: "Tracker programs data synchronization skipped")
         elif any(matcher.matches(close, section) for close in delimiters.close_success):
             return matcher.close_sync_job(success=True)
+        # Search for error closer string (i.e: "Tracker programs data synchronization failed")
         elif any(matcher.matches(close, section) for close in delimiters.close_error):
             return matcher.close_sync_job(success=False)
+        # Refactor: no matches+parse -> parse1() or parse2() or ... -> add_error of that output
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
         elif matcher.matches_caused_by():
             return matcher.add_error()
         elif matcher.matches_error_detail():
-            return matcher.add_error()
+            return matcher.add_detail_error()
         else:
             return state
 
@@ -179,7 +183,20 @@ class LogEntryReducer:
     def matches_error_detail(self):
         return "Detail: " in self.log_entry.text
 
-    def parse_import_summaries(self):
+    def add_detail_error(self) -> SyncJobParserState:
+        """
+        If the log entry starts with "Detail: ", it usually follows a "Caused by" error message.
+        Let's concatenate it to the previous error message if that's the case.
+        """
+        text = self.log_entry.text
+        errors = self.state.current.errors if self.state.current else None
+
+        if text.startswith("Detail: ") and errors and "Caused by" in errors[-1]:
+            return self.state.append_to_last_error(text)
+        else:
+            return self.state
+
+    def parse_import_summaries(self) -> SyncJobParserState:
         state = self.state
         log_entry = self.log_entry
         summaries = parse_import_summaries(log_entry.text)

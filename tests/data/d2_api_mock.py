@@ -25,6 +25,7 @@ T = TypeVar("T", bound=BaseModel)
 mock_instance = Instance(
     url="https://mock-instance",
     auth=PersonalTokenAccessAuth(token="NOT_USED"),
+    docker_container="mock_container",
 )
 
 

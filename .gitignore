@@ -11,3 +11,4 @@ tests/playground
 /*.sh
 cache.json  
 /bak
+/.bak

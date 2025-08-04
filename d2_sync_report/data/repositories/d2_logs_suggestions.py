@@ -1,7 +1,9 @@
+from pathlib import Path
 import re
 import json
 from typing import Any, TypedDict, Optional, List
 from string import Formatter
+from importlib.resources import files
 
 from d2_sync_report.data.dhis2_api import DictResponse, D2Api
 from d2_sync_report.domain.entities.instance import Instance
@@ -12,24 +14,39 @@ class ErrorMapping(TypedDict):
     suggestion: str
 
 
+class ExtraVariables(TypedDict):
+    base_url: str
+    docker_container: str
+    resources_folder: str
+
+
 class D2LogsSuggestions:
     instance: Instance
     api: D2Api
     error_mappings: List[ErrorMapping]
+    # dict with keys base_url and docker_container
+    extra_variables: ExtraVariables
 
     def __init__(self, api: D2Api):
         self.api = api
         self.instance = api.instance
         self.error_mappings = self._get_error_mappings_from_file("suggestions.json")
+        self.extra_variables = {
+            "base_url": api.instance.url.rstrip("/"),
+            "docker_container": api.instance.docker_container or "UNDEFINED",
+            "resources_folder": target_dir.as_posix(),
+        }
+
+    def copy_resources(self):
+        copy_resources()
 
     def get_suggestions_from_error(self, error: str) -> List[str]:
-        extra_variables = dict(base_url=self.instance.url.rstrip("/"))
         suggestions: List[str] = []
 
         for mapping in self.error_mappings:
             if (variables := self._extract_variables_from_template(error, mapping)) is not None:
                 object_variables = self._get_object_mapping_program_variables(variables)
-                object_variables.update(extra_variables)
+                object_variables.update(self.extra_variables)
                 suggestion = mapping["suggestion"].format(**object_variables)
                 suggestions.append(suggestion)
 
@@ -58,7 +75,7 @@ class D2LogsSuggestions:
 
     def _extract_variables_from_template(
         self, error_message: str, mapping: ErrorMapping
-    ) -> Optional[dict[str, str | Any]]:
+    ) -> Optional[dict[str, Any]]:
         regex = self._extract_variables(mapping["error"])
         match = regex.search(error_message)
         return match.groupdict() if match else None
@@ -88,7 +105,7 @@ class D2LogsSuggestions:
             ).root
 
             entities = response.get(plural_name, [])
-            print(f"Retrieved {len(entities)} entities for {object_id} from {endpoint}")
+            # print(f"Retrieved {len(entities)} entities for {object_id} from {endpoint}")
 
             if entities and "name" in entities[0]:
                 result[name_key] = entities[0]["name"]
@@ -96,3 +113,24 @@ class D2LogsSuggestions:
                 result[name_key] = object_id
 
         return result
+
+
+target_dir = Path("/tmp/d2-sync-report-resources")
+
+
+def copy_resources():
+    """
+    Some of the suggestions involve running SQL queries, so let's copy the
+    resources folder from the package to a temporary directory that the user can access.
+    """
+    source_package = "d2_sync_report.data.repositories.resources"
+    source_path = files(source_package)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    print("Copying resources from", source_path, "to", target_dir)
+
+    for resource in source_path.iterdir():
+        if not resource.name.endswith(".sql"):
+            continue
+        target_file = target_dir / resource.name
+        target_file.write_text(resource.read_text(encoding="utf-8"))
+        print(f"Copied: {resource.name} -> {target_file}")

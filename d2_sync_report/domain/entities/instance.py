@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 
 
 @dataclass
@@ -22,3 +22,4 @@ Auth = Union[BasicAuth, PersonalTokenAccessAuth]
 class Instance:
     url: str
     auth: Auth
+    docker_container: Optional[str]

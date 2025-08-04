@@ -17,6 +17,7 @@ dev = [
   "pylint",
   "mypy",
   "pytest",
+  "pytest-watcher",
   "types-requests"
 ]
 
@@ -41,4 +42,5 @@ features = ["dev"]
 cli = "python -m d2_sync_report.cli {args}"
 lint = "black d2_sync_report tests {args}"
 test = "pytest {args}"
+test-watch = "ptw --now --patterns '*.py,*.log' tests/ {args}"
 typecheck = "mypy d2_sync_report tests {args}"
