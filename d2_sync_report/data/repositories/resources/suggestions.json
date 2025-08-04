@@ -28,6 +28,21 @@
     {
       "error": "Category option combo not found or not accessible for writing data: `{category_option_combo_id}`",
       "suggestion": "Category option combo `{category_option_combo_name}` [{category_option_combo_id}] does not exist on the remote server or the sync user has no rights to write data to it. A category option combo has no sharings, it's inherited from its category options, so we need to update these sharings. Note that you will need also the clear the application cache for new sharing to apply. Steps: 1) Go to Maintenance App, click on section CATEGORY, then `Category option` in the left sidebar, and search for all the category options ('{category_option_combo_name}'), double-click, Sharing Settings, set Data -> Can Capture and view for the sync user: {base_url}/dhis-web-maintenance/index.html#/edit/categorySection/categoryOption. 2) Go to the Data Administration App, section Maintenance, check Clear application cache and click Perform maintenance."
+    },
+
+    {
+      "error": "object_id=\"{event_id}\" message=\"object='Event', value='Not possible to add event to a completed enrollment",
+      "suggestion": "Uncomplete this enrollment for event {event_id} to sync: {base_url}/dhis-web-capture/index.html#/enrollment?enrollmentId={event_enrollment}&orgUnitId={event_orgUnit}&programId={event_program}&teiId={event_trackedEntity}"
+    },
+
+    {
+      "error": "object_id=\"{event_id}\" message=\"Program stage is not repeatable and an event already exists",
+      "suggestion": "Event {event_id} already exists in a non-repeatable stage in the remote server. Review if that event should be deleted in the remove or local servers: {base_url}/dhis-web-capture/index.html#/enrollmentEventEdit?eventId={event_id}&orgUnitId={event_orgUnit}"
+    },
+
+    {
+      "error": "No row with the given identifier exists",
+      "suggestion": "The error 'No row with the given identifier exists' may have different causes. Check the exact error above for more details. Sometimes, it's a transient error that can be solved by restarting the DHIS2 instance, in others it's a problem with the metadata that must be manually explored"
     }
   ]
 }

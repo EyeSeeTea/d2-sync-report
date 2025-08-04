@@ -22,5 +22,12 @@ Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violate
 Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_t94h9p111tcydbm6je22tla52"
   Detail: Key (uid)=(h3kTURQ3vV8) already exists
 
+
+* ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummary{status=ERROR, description='null', importCount=[imports=0, updates=0, ignores=1], conflicts=[ImportConflict{object='Event', value='Not possible to add event to a completed enrollment. Event created date ( Fri Sep 15 00:00:00 CEST 2023 ) is after enrollment completed date ( Fri Aug 18 00:00:00 CEST 2023 ).'}], dataSetComplete='null', reference='Bzyve9gtbyw', href='null'} (SyncUtils.java [taskScheduler-1])
+
+* ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummary{status=ERROR, description='Program stage is not repeatable and an event already exists', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='Bzyve9gtbyw', href='null'} (SyncUtils.java [taskScheduler-1])
+
+Caused by: org.hibernate.ObjectNotFoundException: No row with the given identifier exists: [org.hisp.dhis.category.CategoryOptionCombo#1698861]
+
 * INFO  2025-07-17T12:38:09,837 Tracker programs data synchronization skipped. No new or updated TEIs found. (NotificationLoggerUtil.java [taskScheduler-24])
 * INFO  2025-07-17T12:38:09,837 [TRACKER_PROGRAMS_DATA_SYNC AqujRwbbik6] Process completed after 0.109s: Tracker programs data synchronization skipped. No new or updated TEIs found. (ControlledJobProgress.java [taskScheduler-24])

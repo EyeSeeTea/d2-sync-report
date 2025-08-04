@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
+from d2_sync_report.cli import get_default_suggestions_path
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
 from tests.data.d2_api_mock import D2ApiMock, Expectations, MockRequest
 
@@ -54,13 +55,9 @@ def test_event_programs_data_sync_error():
         ],
     )
 
-    assert_string_from_parts(
+    assert_keywords(
         report.errors[1],
-        [
-            'status="ERROR"',
-            'object_id="zCziVRiuiHG"',
-            "message=\"Deletion of event zCziVRiuiHG failed Attribute.value:Non-unique attribute value 'Ar011R' for attribute QPFgav8YHVb=ImportConflict{error:Attribute.value, message:Non-unique attribute value 'Ar011R' for attribute QPFgav8YHVb}\"",
-        ],
+        ["zCziVRiuiHG", "Non-unique attribute value 'Ar011R'", "attribute QPFgav8YHVb"],
     )
 
 
@@ -126,7 +123,7 @@ def test_tracker_programs_data_sync_error():
 
     assert (
         report.errors[2]
-        == 'status="WARNING" object_id="null" message="Import process completed successfully E7643:2025W27:h3zkiErOoFl=ImportConflict{error:E7643, message:Period: `2025W27` is not open for this data set at this time: `h3zkiErOoFl`}"'
+        == 'status="WARNING" object_id="null" message="Import process completed successfully error:E7643, message:Period: `2025W27` is not open for this data set at this time: `h3zkiErOoFl`"'
     )
 
     assert (
@@ -141,7 +138,7 @@ def test_tracker_programs_data_sync_error():
 
     assert (
         report.errors[3]
-        == """status="ERROR" object_id="HFxbAFNOYqb" message="WVq6Gnf3Qvq:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk=ImportConflict{error:WVq6Gnf3Qvq, message:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk}\""""
+        == 'status="ERROR" object_id="HFxbAFNOYqb" message="error:WVq6Gnf3Qvq, message:Value \'kenema_other_chiefdoms_outside_kenema_district_itf\' is not a valid option code of option set: CTZmCZx5nOk"'
     )
 
     assert (
@@ -156,10 +153,10 @@ def test_tracker_programs_data_sync_error():
 
     assert (
         report.errors[4]
-        == """status="WARNING" object_id="null" message="Import process completed successfully E7613:zUs1ja0c8zT=ImportConflict{error:E7613, message:Category option combo not found or not accessible for writing data: `zUs1ja0c8zT`}\""""
+        == 'status="WARNING" object_id="null" message="Import process completed successfully error:E7613, message:Category option combo not found or not accessible for writing data: `zUs1ja0c8zT`"'
     )
 
-    assert_suggestion(
+    assert_keywords(
         report.suggestions[4],
         [
             "Category option combo `CategoryOption1, CategoryOption2`",
@@ -181,9 +178,73 @@ def test_tracker_programs_data_sync_error():
         == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_t94h9p111tcydbm6je22tla52" - Detail: Key (uid)=(h3kTURQ3vV8) already exists'
     )
 
-    assert_suggestion(
+    assert_keywords(
         report.suggestions[5],
         ["DHIS2-12887", "delete the comment", "mock_container psql"],
+    )
+
+    ## error: status="ERROR" object_id="Bzyve9gtbyw" message="object='Event', value='Not possible to add event to a completed enrollment. Event created date ( Fri Sep 15 00:00:00 CEST 2023 ) is after enrollment completed date ( Fri Aug 18 00:00:00 CEST 2023 ).'"
+
+    ## suggestion: Uncomplete this enrollment for event Bzyve9gtbyw to sync: http://localhost:7001/dhis-web-capture/index.html#/enrollment?enrollmentId=pfDcyZw9bs1&orgUnitId=RFe6Bei9Yek&programId=jPRLZ8MJ86L&teiId=uyRjwOSJa5k
+
+    assert len(report.errors) >= 7
+    assert len(report.suggestions) >= 7
+
+    assert_keywords(
+        report.errors[6],
+        [
+            "Bzyve9gtbyw",
+            "Not possible to add event to a completed enrollment",
+        ],
+    )
+
+    assert_keywords(
+        report.suggestions[6],
+        [
+            "Uncomplete this enrollment for event Bzyve9gtbyw",
+            "/dhis-web-capture/index.html#/enrollment?enrollmentId=pfDcyZw9bs1&orgUnitId=RFe6Bei9Yek&programId=jPRLZ8MJ86L&teiId=uyRjwOSJa5k",
+        ],
+    )
+
+    ##
+
+    assert len(report.errors) >= 8
+    assert len(report.suggestions) >= 8
+    assert_keywords(
+        report.errors[7],
+        [
+            "Program stage is not repeatable",
+            "an event already exists",
+            "Bzyve9gtbyw",
+        ],
+    )
+    assert_keywords(
+        report.suggestions[7],
+        [
+            "already exists in a non-repeatable stage",
+            "/dhis-web-capture/index.html#/enrollmentEventEdit?eventId=Bzyve9gtbyw&orgUnitId=RFe6Bei9Yek",
+        ],
+    )
+
+    ##  No row with the given identifier exists: [org.hisp.dhis.category.CategoryOptionCombo#1698861]
+    # Suggestions: The error 'No row with the given identifier exists' may have different causes. Check the exact error above for more details. Sometimes, it's a transient error that can be solved by restarting the DHIS2 instance, in others it's a problem with the metadata that must be manually explored
+
+    assert len(report.errors) >= 9
+    assert len(report.suggestions) >= 9
+    assert_keywords(
+        report.errors[8],
+        [
+            "No row with the given identifier exists",
+            "org.hisp.dhis.category.CategoryOptionCombo#1698861",
+        ],
+    )
+    assert_keywords(
+        report.suggestions[8],
+        [
+            "may have different causes.",
+            "restarting",
+            "problem with the metadata",
+        ],
     )
 
 
@@ -238,13 +299,21 @@ def get_log_folder(folder: str) -> str:
     return os.path.join(os.path.dirname(__file__), "logs", folder)
 
 
+suggestions_path = get_default_suggestions_path()
+
+
 def get_repo(folder: str, expectations: Optional[Expectations] = None) -> D2LogsParser:
     log_path = get_log_folder(folder)
     api = D2ApiMock(expectations or mocked_metadata_requests)
-    return D2LogsParser(api, logs_folder_path=log_path)
+
+    return D2LogsParser(
+        api=api,
+        logs_folder_path=log_path,
+        suggestions_path=suggestions_path,
+    )
 
 
-def assert_suggestion(actual: str, expected_words: list[str]):
+def assert_keywords(actual: str, expected_words: list[str]):
     """
     Assert that expected words exist verbatim in a string.
 
@@ -289,5 +358,16 @@ mocked_metadata_requests = [
         path="/api/organisationUnits",
         params=[("fields", "id,name"), ("filter", "id:eq:WA5iEXjqCnS")],
         response={"organisationUnits": [{"id": "WA5iEXjqCnS", "name": "Mock Organisation Unit"}]},
+    ),
+    MockRequest(
+        method="GET",
+        path="/api/events/Bzyve9gtbyw",
+        response={
+            "event": "Bzyve9gtbyw",
+            "enrollment": "pfDcyZw9bs1",
+            "orgUnit": "RFe6Bei9Yek",
+            "program": "jPRLZ8MJ86L",
+            "trackedEntityInstance": "uyRjwOSJa5k",
+        },
     ),
 ]

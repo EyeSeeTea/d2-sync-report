@@ -1,3 +1,4 @@
+from importlib.resources import files
 import re
 from dataclasses import dataclass, replace
 from typing import Annotated, Optional
@@ -38,6 +39,14 @@ class Args:
         Optional[str],
         arg(help="Docker container running in the instance", metavar="NAME"),
     ] = None
+    suggestions_path: Annotated[
+        Optional[str],
+        arg(
+            help="Path to custom suggestions JSON file",
+            metavar="PATH",
+        ),
+    ] = None
+
     ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
     notify_user_group: Annotated[
         Optional[str], arg(help="User group to send the report to", metavar="NAME or CODE")
@@ -48,10 +57,11 @@ def main() -> None:
     args = tyro.cli(Args)
     instance = get_instance(args)
     api = D2ApiReal(instance)
+    suggestions_path = args.suggestions_path or get_default_suggestions_path()
 
     SendSyncReportUseCase(
         SyncJobReportExecutionFileRepository(),
-        SyncJobReportD2Repository(api, args.logs_folder_path),
+        SyncJobReportD2Repository(api, args.logs_folder_path, suggestions_path),
         MetadataVersioningD2Repository(api),
         UserD2Repository(api),
         MessageD2Repository(api),
@@ -60,6 +70,11 @@ def main() -> None:
         skip_cache=args.ignore_cache,
         instance=instance,
     )
+
+
+def get_default_suggestions_path() -> str:
+    folder = "d2_sync_report.data.repositories.resources"
+    return str(files(folder).joinpath("suggestions.json"))
 
 
 def log_args(args: Args) -> None:

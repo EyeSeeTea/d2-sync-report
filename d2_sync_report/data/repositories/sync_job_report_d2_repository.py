@@ -15,13 +15,14 @@ from d2_sync_report.domain.repositories.sync_job_report_repository import (
 
 
 class SyncJobReportD2Repository(SyncJobReportRepository):
-    def __init__(self, api: D2Api, logs_folder: str):
+    def __init__(self, api: D2Api, logs_folder: str, suggestions_path: str):
         self.api = api
         self.logs_folder = logs_folder
+        self.suggestions_path = suggestions_path
 
     def get(self, since: Optional[datetime] = None) -> SyncJobReport:
         with local_or_docker_folder(self.logs_folder) as logs_folder:
-            return D2LogsParser(self.api, logs_folder).get(since=since)
+            return D2LogsParser(self.api, logs_folder, self.suggestions_path).get(since=since)
 
 
 @contextmanager

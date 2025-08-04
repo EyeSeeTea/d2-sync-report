@@ -27,10 +27,10 @@ class D2LogsSuggestions:
     # dict with keys base_url and docker_container
     extra_variables: ExtraVariables
 
-    def __init__(self, api: D2Api):
+    def __init__(self, api: D2Api, suggestions_path: str):
         self.api = api
         self.instance = api.instance
-        self.error_mappings = self._get_error_mappings_from_file("suggestions.json")
+        self.error_mappings = self._get_error_mappings_from_file(suggestions_path)
         self.extra_variables = {
             "base_url": api.instance.url.rstrip("/"),
             "docker_container": api.instance.docker_container or "UNDEFINED",
@@ -96,21 +96,36 @@ class D2LogsSuggestions:
                 word.capitalize() if i else word for i, word in enumerate(base_name.split("_"))
             )
             plural_name = camel_name + "s"
-            endpoint = f"/api/{plural_name}"
 
-            response = self.api.get(
-                path=endpoint,
-                response_model=DictResponse,
-                params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
-            ).root
+            if plural_name == "events":
+                response = self.api.get(
+                    path=f"/api/events/{object_id}",
+                    response_model=DictResponse,
+                ).root
 
-            entities = response.get(plural_name, [])
-            # print(f"Retrieved {len(entities)} entities for {object_id} from {endpoint}")
+                #  "suggestion": "Uncomplete this enrollment for event {event_id} to sync: {base_url}/dhis-web-capture/index.html#/enrollment?enrollmentId={event_enrollment}&orgUnitId={event_orgUnit}&programId={event_program}&teiId={event_trackedEntity}"
+                namespace: dict[str, Optional[str]] = {
+                    "event_id": object_id,
+                    "event_enrollment": response.get("enrollment"),
+                    "event_orgUnit": response.get("orgUnit"),
+                    "event_program": response.get("program"),
+                    "event_trackedEntity": response.get("trackedEntityInstance"),
+                }
 
-            if entities and "name" in entities[0]:
-                result[name_key] = entities[0]["name"]
+                result.update(namespace)
             else:
-                result[name_key] = object_id
+                response = self.api.get(
+                    path=f"/api/{plural_name}",
+                    response_model=DictResponse,
+                    params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
+                ).root
+
+                entities = response.get(plural_name, [])
+
+                if entities and "name" in entities[0]:
+                    result[name_key] = entities[0]["name"]
+                else:
+                    result[name_key] = object_id
 
         return result
 

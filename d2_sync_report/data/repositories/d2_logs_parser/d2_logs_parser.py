@@ -33,10 +33,10 @@ of the current synchronization job and its state.
 class D2LogsParser:
     api: D2Api
 
-    def __init__(self, api: D2Api, logs_folder_path: str):
+    def __init__(self, api: D2Api, logs_folder_path: str, suggestions_path: str):
         self.api = api
         self.logs_folder_path = logs_folder_path
-        self.d2_logs_suggestions = D2LogsSuggestions(self.api)
+        self.d2_logs_suggestions = D2LogsSuggestions(self.api, suggestions_path)
 
     def get(self, since: Optional[datetime] = None) -> SyncJobReport:
         log_files = self._get_log_files()

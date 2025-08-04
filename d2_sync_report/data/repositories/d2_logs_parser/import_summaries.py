@@ -16,7 +16,7 @@ ImportSummary{
 
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Iterator, List, Optional
 
 
 @dataclass
@@ -48,7 +48,7 @@ class ImportSummary:
 
 
 def parse_import_summaries(line: str) -> List[ImportSummary]:
-    summary_blocks: List[str] = re.findall(r"ImportSummary\{(.*?)'\}", line)
+    summary_blocks = parse_with_brackets("ImportSummary", line)
     summaries: List[ImportSummary] = []
 
     for block in summary_blocks:
@@ -57,16 +57,51 @@ def parse_import_summaries(line: str) -> List[ImportSummary]:
         description_match = re.search(r"description='(.*?)'", block)
         import_count_match = re.search(r"importCount=\[(.*?)\]", block)
         reference_match = re.search(r"reference='(.*?)'", block)
-        conflicts_match = re.search(r"conflicts=\{(.*?)\},", block, re.DOTALL)
+        conflicts_match = re.search(r"ImportConflict\{(.*?)\}", block, re.DOTALL)
 
         summary = ImportSummary(
             status=status_match.group(1) if status_match else None,
             description=description_match.group(1) if description_match else None,
             import_count=import_count_match.group(1) if import_count_match else None,
             reference=reference_match.group(1) if reference_match else None,
-            conflicts=conflicts_match.group(1).strip() if conflicts_match else None,
+            conflicts=(conflicts_match.group(1).strip() if conflicts_match else None),
         )
 
         summaries.append(summary)
 
     return summaries
+
+
+def parse_with_brackets(keyword: str, text: str) -> Iterator[str]:
+    """
+    Parses text for occurrences of a "keyword{...}", supports balanced braces.
+
+    For example, it can parse ImportSummary blocks like:
+
+        ImportSummary{some error} -> "some error"
+        ImportConflict{{error 1}, {error2}} -> "{error 1}, {error2}"
+    """
+    keyword2 = keyword + "{"
+    i = 0
+
+    while i < len(text):
+        start = text.find(keyword2, i)
+        if start == -1:
+            break
+
+        brace_level = 1
+        j = start + len(keyword2)
+        while j < len(text) and brace_level > 0:
+            if text[j] == "{":
+                brace_level += 1
+            elif text[j] == "}":
+                brace_level -= 1
+            j += 1
+
+        if brace_level == 0:
+            content = text[start + len(keyword2) : j - 1]
+            yield content
+            i = j
+        else:
+            # Unbalanced braces; abort
+            break
