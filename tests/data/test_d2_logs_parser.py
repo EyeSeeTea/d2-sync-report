@@ -5,7 +5,8 @@ from typing import Optional
 from d2_sync_report.cli import get_default_suggestions_path
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
 from d2_sync_report.domain.entities.sync_job_report import SyncJobReportItem
-from tests.data.d2_api_mock import D2ApiMock, Expectations, MockRequest
+from tests.data.d2_api_mock import D2ApiMock, Expectations
+from tests.data.request_mocks import request_mocks
 
 ## Aggregated data synchronization
 
@@ -60,6 +61,34 @@ def test_tracker_programs_data_sync_success():
     assert report.type == "trackerProgramsData"
     assert report.success is True
     assert len(report.errors) == 0
+
+
+## Metadata synchronization
+
+
+def test_metadata_sync_success():
+    repository = get_repo(folder="metadata-synchronization-success")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is True
+    assert len(report.errors) == 0
+
+
+def test_metadata_sync_error():
+    repository = get_repo(folder="metadata-synchronization-error")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is False
+    assert len(report.errors) == 2
+
+
+## Test errors and suggestions
 
 
 def test_error_program_not_assigned_to_organisation_unit():
@@ -221,29 +250,28 @@ def test_no_row_with_given_identifier_exists():
     )
 
 
-## Metadata synchronization
+"""
+{
+      "error": "Deletion of event {event_id} failed error:Attribute.value, message:Non-unique attribute value '{attribute_value}' for attribute {tracked_entity_attribute_id}",
+      "suggestion": "Event {event_id} could not be deleted because attribute value for attribute '{tracked_entity_attribute_name}' is not unique: {base_url}/dhis-web-capture/index.html#/enrollmentEventEdit?eventId={event_id}&orgUnitId={event_orgUnit}"
+    }
+    """
 
 
-def test_metadata_sync_success():
-    repository = get_repo(folder="metadata-synchronization-success")
-    reports = repository.get().items
+def test_event_could_not_be_deleted_due_to_non_unique_attribute_value():
+    report = get_report_with_error_and_suggestions()
 
-    assert len(reports) == 1
-    report = reports[0]
-    assert report.type == "metadata"
-    assert report.success is True
-    assert len(report.errors) == 0
-
-
-def test_metadata_sync_error():
-    repository = get_repo(folder="metadata-synchronization-error")
-    reports = repository.get().items
-
-    assert len(reports) == 1
-    report = reports[0]
-    assert report.type == "metadata"
-    assert report.success is False
-    assert len(report.errors) == 2
+    assert_report_entry(
+        report,
+        error=[
+            "Deletion of event",
+            "Non-unique attribute value",
+            "Ar011R",
+        ],
+        suggestion=[
+            "/dhis-web-capture/index.html#/enrollmentEventEdit?eventId=Bzyve9gtbyw&orgUnitId=RFe6Bei9Yek",
+        ],
+    )
 
 
 ## Helpers
@@ -283,59 +311,10 @@ suggestions_path = get_default_suggestions_path()
 
 def get_repo(folder: str, expectations: Optional[Expectations] = None) -> D2LogsParser:
     return D2LogsParser(
-        api=D2ApiMock(expectations or mocked_metadata_requests),
+        api=D2ApiMock(expectations or request_mocks),
         logs_folder_path=get_log_folder(folder),
         suggestions_path=suggestions_path,
     )
-
-
-mocked_metadata_requests = [
-    MockRequest(
-        method="GET",
-        path="/api/programs",
-        params=[("fields", "id,name"), ("filter", "id:eq:Gq942x50jWX")],
-        response={"programs": [{"id": "Gq942x50jWX", "name": "Mock Program"}]},
-    ),
-    MockRequest(
-        method="GET",
-        path="/api/dataSets",
-        params=[("fields", "id,name"), ("filter", "id:eq:h3zkiErOoFl")],
-        response={"dataSets": [{"id": "h3zkiErOoFl", "name": "Mock Data Set"}]},
-    ),
-    MockRequest(
-        method="GET",
-        path="/api/optionSets",
-        params=[("fields", "id,name"), ("filter", "id:eq:CTZmCZx5nOk")],
-        response={"optionSets": [{"id": "CTZmCZx5nOk", "name": "Mock Option Set"}]},
-    ),
-    MockRequest(
-        method="GET",
-        path="/api/categoryOptionCombos",
-        params=[("fields", "id,name"), ("filter", "id:eq:zUs1ja0c8zT")],
-        response={
-            "categoryOptionCombos": [
-                {"id": "zUs1ja0c8zT", "name": "CategoryOption1, CategoryOption2"}
-            ]
-        },
-    ),
-    MockRequest(
-        method="GET",
-        path="/api/organisationUnits",
-        params=[("fields", "id,name"), ("filter", "id:eq:WA5iEXjqCnS")],
-        response={"organisationUnits": [{"id": "WA5iEXjqCnS", "name": "Mock Organisation Unit"}]},
-    ),
-    MockRequest(
-        method="GET",
-        path="/api/events/Bzyve9gtbyw",
-        response={
-            "event": "Bzyve9gtbyw",
-            "enrollment": "pfDcyZw9bs1",
-            "orgUnit": "RFe6Bei9Yek",
-            "program": "jPRLZ8MJ86L",
-            "trackedEntityInstance": "uyRjwOSJa5k",
-        },
-    ),
-]
 
 
 def check_if_some_text_matches_all_keywords(texts: list[str], expected_words: list[str]):
@@ -350,7 +329,7 @@ def assert_report_entry(
     suggestion: list[str],
 ):
     """
-    Assert that the report entry has the expected error and suggestion keywords.
+    Assert that some entry in the error has all the expected error and suggestion keywords.
     """
 
     assert check_if_some_text_matches_all_keywords(report.errors, error)

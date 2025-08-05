@@ -43,6 +43,11 @@
     {
       "error": "No row with the given identifier exists",
       "suggestion": "The error 'No row with the given identifier exists' may have different causes. Check the exact error above for more details. Sometimes, it's a transient error that can be solved by restarting the DHIS2 instance, in others it's a problem with the metadata that must be manually explored"
+    },
+
+    {
+      "error": "Deletion of event {event_id} failed error:Attribute.value, message:Non-unique attribute value '{attribute_value}' for attribute {tracked_entity_attribute_id}",
+      "suggestion": "Event {event_id} could not be deleted because attribute value for attribute '{tracked_entity_attribute_name}' is not unique: {base_url}/dhis-web-capture/index.html#/enrollmentEventEdit?eventId={event_id}&orgUnitId={event_orgUnit}"
     }
   ]
 }

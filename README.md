@@ -1,11 +1,11 @@
-A command-line tool for generating reports from DHIS2 scheduled sync job logs.
+A command-line tool for generating reports from DHIS2 Scheduled Sync Job logs.
 
-Supported job types:
+Supported Job types:
 
-- Data synchronization
-- Event Programs Data Sync
-- Tracker Programs Data Sync
-- Metadata synchronization
+- Data synchronization.
+- Event Programs Data Sync.
+- Tracker Programs Data Sync.
+- Metadata synchronization.
 
 The script can access logs stored either on the local filesystem or inside Docker containers.
 
@@ -29,17 +29,22 @@ $ .venv/bin/d2-sync-report # Check that it works
 $ d2-sync-report --help
 usage: d2-sync-report [-h] [OPTIONS]
 
-╭─ options ───────────────────────────────────────────────────────╮
-│ -h, --help         show this help message and exit              │
-│ --logs-folder-path [DOCKER_CONTAINER:]FOLDER_PATH               │
-│                    Folder containing dhis.log (required)        │
-│ --ignore-cache, --no-ignore-cache                               │
-│                    Ignore cached state (default: False)         │
-│ --url URL          DHIS2 instance base URL (default: None)      │
-│ --auth AUTH        USER:PASS or PAT token (default: None)       │
-│ --notify-user-group NAME or CODE                                │
-│                    User group to send report to (default: None) │
-╰─────────────────────────────────────────────────────────────────╯
+╭─ options ───────────────────────────────────────────────────────────────────╮
+│ -h, --help         show this help message and exit                          │
+│ --logs-folder-path [DOCKER_CONTAINER:]FOLDER_PATH                           │
+│                    Folder containing file dhis.log (required)               │
+│ --url URL          DHIS2 instance base URL (required)                       │
+│ --auth AUTH        USER:PASS or PAT token (required)                        │
+│ --docker-container NAME                                                     │
+│                    Docker container running in the instance (default: None) │
+│ --suggestions-path PATH                                                     │
+│                    Path to custom suggestions JSON file (default: None)     │
+│ --ignore-cache, --no-ignore-cache                                           │
+│                    Ignore cached state (default: False)                     │
+│ --notify-user-group NAME or CODE                                            │
+│                    User group to send the report to (default: None)         │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
 ```
 
 Examples:

@@ -5,6 +5,8 @@ from typing import Any, Literal, TypedDict, Optional, List
 from string import Formatter
 from importlib.resources import files
 
+import requests
+
 from d2_sync_report.data.dhis2_api import DictResponse, D2Api
 from d2_sync_report.domain.entities.instance import Instance
 
@@ -99,7 +101,8 @@ class D2LogsSuggestions:
 
             if plural_name == "events":
                 namespace = self._get_event_namespace(object_id)
-                result.update(namespace)
+                if namespace:
+                    result.update(namespace)
             else:
                 entity = self._get_metadata_entity(object_id, plural_name)
                 result[name_key] = entity["name"] if entity and "name" in entity else None
@@ -109,20 +112,28 @@ class D2LogsSuggestions:
     def _get_metadata_entity(
         self, object_id: str, plural_name: str
     ) -> Optional[dict[Literal["name"], str]]:
-        response = self.api.get(
-            path=f"/api/{plural_name}",
-            response_model=DictResponse,
-            params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
-        ).root
+        try:
+            response = self.api.get(
+                path=f"/api/{plural_name}",
+                response_model=DictResponse,
+                params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
+            ).root
+        except requests.exceptions.HTTPError as e:
+            print(f"Error fetching {plural_name} with ID {object_id}: {e}")
+            return None
 
         entities = response.get(plural_name, [])
         return entities[0] if entities else None
 
     def _get_event_namespace(self, event_id: str):
-        response = self.api.get(
-            path=f"/api/events/{event_id}",
-            response_model=DictResponse,
-        ).root
+        try:
+            response = self.api.get(
+                path=f"/api/events/{event_id}",
+                response_model=DictResponse,
+            ).root
+        except requests.exceptions.HTTPError as e:
+            print(f"Error fetching event {event_id}: {e}")
+            return None
 
         namespace: dict[str, Optional[str]] = {
             "event_id": event_id,
