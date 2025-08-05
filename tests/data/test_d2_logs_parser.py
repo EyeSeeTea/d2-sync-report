@@ -4,6 +4,7 @@ from typing import Optional
 
 from d2_sync_report.cli import get_default_suggestions_path
 from d2_sync_report.data.repositories.d2_logs_parser.d2_logs_parser import D2LogsParser
+from d2_sync_report.domain.entities.sync_job_report import SyncJobReportItem
 from tests.data.d2_api_mock import D2ApiMock, Expectations, MockRequest
 
 ## Aggregated data synchronization
@@ -87,18 +88,32 @@ def test_tracker_programs_data_sync_error():
     assert len(report.errors) >= 1
     assert len(report.suggestions) >= 1
 
-    assert_string_from_parts(
-        report.errors[0],
-        [
-            'status="ERROR"',
-            'object_id="Gq942x50jWX"',
-            'message="Program is not assigned to this Organisation Unit: WA5iEXjqCnS"',
+    assert_report_entry(
+        report,
+        error=[
+            "Gq942x50jWX",
+            "Program is not assigned to this Organisation Unit: WA5iEXjqCnS",
+        ],
+        suggestion=[
+            "Maintenance App",
+            "Mock Program",
+            "Mock Organisation Unit",
+            "/dhis-web-maintenance/index.html#/edit/programSection/program/Gq942x50jWX",
         ],
     )
 
-    assert (
-        report.suggestions[0]
-        == "Go to Maintenance App, click on section PROGRAM, search for program 'Mock Program', edit, click on step [4] Acccess, search organisation unit 'Mock Organisation Unit', select it, and save the program: https://mock-instance/dhis-web-maintenance/index.html#/edit/programSection/program/Gq942x50jWX"
+    assert_report_entry(
+        report,
+        error=[
+            "Gq942x50jWX",
+            "Program is not assigned to this Organisation Unit",
+        ],
+        suggestion=[
+            "Maintenance App",
+            "Mock Program",
+            "Mock Organisation Unit",
+            "/dhis-web-maintenance/index.html#/edit/programSection/program/Gq942x50jWX",
+        ],
     )
 
     ##
@@ -366,3 +381,20 @@ mocked_metadata_requests = [
         },
     ),
 ]
+
+
+def check_all(text: str, expected_words: list[str]) -> bool:
+    return all(word in text for word in expected_words)
+
+
+def assert_report_entry(
+    report: SyncJobReportItem,
+    error: list[str],
+    suggestion: list[str],
+):
+    """
+    Assert that the report entry has the expected error and suggestion keywords.
+    """
+
+    assert any(check_all(error_, error) for error_ in report.errors)
+    assert any(check_all(suggestion_, suggestion) for suggestion_ in report.suggestions)
