@@ -20,7 +20,7 @@ Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violate
 * ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummary{status=WARNING, description='Import process completed successfully', importCount=[imports=933, updates=8, ignores=53], conflicts={E7613:zUs1ja0c8zT=ImportConflict{error:E7613, message:Category option combo not found or not accessible for writing data: `zUs1ja0c8zT`}}, dataSetComplete='false', reference='null', href='null'} (SyncUtils.java [taskScheduler-1])
 
 Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_t94h9p111tcydbm6je22tla52"
-  Detail: Key (uid)=(h3kTURQ3vV8) already exists
+  Detail: Key (uid)=(NtwUZWYlhxt) already exists
 
 
 * ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummary{status=ERROR, description='null', importCount=[imports=0, updates=0, ignores=1], conflicts=[ImportConflict{object='Event', value='Not possible to add event to a completed enrollment. Event created date ( Fri Sep 15 00:00:00 CEST 2023 ) is after enrollment completed date ( Fri Aug 18 00:00:00 CEST 2023 ).'}], dataSetComplete='null', reference='Bzyve9gtbyw', href='null'} (SyncUtils.java [taskScheduler-1])

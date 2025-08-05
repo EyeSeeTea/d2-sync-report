@@ -175,17 +175,13 @@ def test_tracker_programs_data_sync_error():
 
     assert (
         report.errors[5]
-        == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_t94h9p111tcydbm6je22tla52" - Detail: Key (uid)=(h3kTURQ3vV8) already exists'
+        == 'Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_t94h9p111tcydbm6je22tla52" - Detail: Key (uid)=(NtwUZWYlhxt) already exists'
     )
 
     assert_keywords(
         report.suggestions[5],
-        ["DHIS2-12887", "delete the comment", "mock_container psql"],
+        ["DHIS2-12887", "delete-tracker-note", "mock_container psql"],
     )
-
-    ## error: status="ERROR" object_id="Bzyve9gtbyw" message="object='Event', value='Not possible to add event to a completed enrollment. Event created date ( Fri Sep 15 00:00:00 CEST 2023 ) is after enrollment completed date ( Fri Aug 18 00:00:00 CEST 2023 ).'"
-
-    ## suggestion: Uncomplete this enrollment for event Bzyve9gtbyw to sync: http://localhost:7001/dhis-web-capture/index.html#/enrollment?enrollmentId=pfDcyZw9bs1&orgUnitId=RFe6Bei9Yek&programId=jPRLZ8MJ86L&teiId=uyRjwOSJa5k
 
     assert len(report.errors) >= 7
     assert len(report.suggestions) >= 7
@@ -226,8 +222,7 @@ def test_tracker_programs_data_sync_error():
         ],
     )
 
-    ##  No row with the given identifier exists: [org.hisp.dhis.category.CategoryOptionCombo#1698861]
-    # Suggestions: The error 'No row with the given identifier exists' may have different causes. Check the exact error above for more details. Sometimes, it's a transient error that can be solved by restarting the DHIS2 instance, in others it's a problem with the metadata that must be manually explored
+    ##
 
     assert len(report.errors) >= 9
     assert len(report.suggestions) >= 9

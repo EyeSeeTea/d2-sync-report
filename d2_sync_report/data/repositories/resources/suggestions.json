@@ -12,7 +12,7 @@
 
     {
       "error": "duplicate key value violates unique constraint \"{psql_constraint}\" - Detail: Key (uid)=({note_uid}) already exists",
-      "suggestion": "Due to a known DHIS2 bug [DHIS2-12887], tracked entities, enrollments, and events that include comments/notes (via the 'Comments about this enrollment' widget) fail to sync after being created on the server. To resolve this issue, you need to delete the comment by running the following command: `docker exec -i {docker_container} psql -U dhis dhis --set=constraint_name='{psql_constraint}' --set=uid_to_delete='{note_uid}' < {resources_folder}/delete-tracker-note.sql`"
+      "suggestion": "Due to a known DHIS2 bug [DHIS2-12887], enrollments and events that include notes/comments (via the 'Comments about this enrollment' widget) fail to sync after they have been created on the server. To resolve this issue, run this command to remove the association (not the note itself): `docker exec -i {docker_container} psql -U dhis dhis --set=constraint_name='{psql_constraint}' --set=note_uid='{note_uid}' < {resources_folder}/delete-tracker-note.sql`"
     },
 
     {

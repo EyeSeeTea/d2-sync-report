@@ -1,61 +1,46 @@
--- Given a constraint name and a UID, delete the row comment
--- Typically used to delete trackedEntity/enrollment/event comments.
-
+-- Given a note/comment UID, delete the relationships to enrollments/events in the database.
+--
+-- Tracker notes (comments) are read-only and cannot be deleted thought the API. We will
+-- delete the relationship but not the comment itself, so we can recover it if necessary
+--
+-- dhis2=# SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND
+--           table_type = 'BASE -- TABLE' AND table_name LIKE '%comment%'
+--           and table_name not like '%interpretation%';
+--
+--           table_name
+-- ------------------------------
+-- programinstancecomments       <- intermediate table enrollment/comment
+-- programstageinstancecomments  <- intermediate table event/comment
+-- trackedentitycomment          <- the comment itself
+--
 -- Usage:
+--
 --   $ docker exec -i CONTAINER psql -U dhis dhis2 \
---       --set=constraint_name="'your_constraint'" \
---       --set=uid_to_delete="'your_uid'" \
---       --set=delete='yes' \
+--       --set=note_uid="note_uid" \
+--       --set=dryrun=1 \ <- optional, default is no dry run
 --       -f delete-tracker-note.sql
 
--- Get table and column info from constraint
-WITH constraint_info AS (
-    SELECT
-        conrelid::regclass::text AS table_name
-    FROM
-        pg_constraint c
-        JOIN unnest(c.conkey) AS colnum ON true
-        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = colnum
-    WHERE
-        c.conname = :constraint_name
-),
--- Dynamically construct the SQL query
-query_parts AS (
-    SELECT
-        CASE
-            WHEN :'delete' = 'yes' THEN
+BEGIN;
+    DELETE FROM programstageinstancecomments
+        WHERE trackedentitycommentid IN (
+            SELECT trackedentitycommentid
+            FROM trackedentitycomment
+            WHERE uid = :'note_uid'
+        );
 
-----
-
-
-                format(
-                    $$WITH row_data AS (
-                        SELECT * FROM %I WHERE uid = %L
-                    )
-                    SELECT 'Deleting row:' AS notice, row_to_json(row_data) FROM row_data;
-                    DELETE FROM %I WHERE uid = %L;$$,
-                    table_name, :uid_to_delete,
-                    table_name, :uid_to_delete
-                )
-
-
-
-
-
-
-
-----
-
-            ELSE
-                format(
-                    $$WITH row_data AS (
-                        SELECT * FROM %I WHERE uid = %L
-                    )
-                    SELECT 'Matched row (dry run, not deleted):' AS notice, row_to_json(row_data) FROM row_data;$$,
-                    table_name, :uid_to_delete
-                )
-        END AS full_query
-    FROM constraint_info
-)
--- Execute the constructed SQL
-SELECT full_query FROM query_parts \gexec
+    DELETE FROM programinstancecomments
+        WHERE trackedentitycommentid IN (
+            SELECT trackedentitycommentid
+            FROM trackedentitycomment
+            WHERE uid = :'note_uid'
+        );
+-- Conditionally ROLLBACK or COMMIT
+\if :{?dryrun}
+  \if :dryrun
+    ROLLBACK;
+  \else
+    COMMIT;
+  \endif
+\else
+  COMMIT;
+\endif
