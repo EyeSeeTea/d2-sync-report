@@ -97,10 +97,16 @@ class D2LogsSuggestions:
             camel_name = "".join(
                 word.capitalize() if i else word for i, word in enumerate(base_name.split("_"))
             )
-            plural_name = camel_name + "s"
+            plural_name = (
+                (camel_name + "s") if not camel_name.endswith("y") else (camel_name[:-1] + "ies")
+            )
 
             if plural_name == "events":
                 namespace = self._get_event_namespace(object_id)
+                if namespace:
+                    result.update(namespace)
+            elif plural_name == "trackedEntities":
+                namespace = self._get_tracked_entity_namespace(object_id)
                 if namespace:
                     result.update(namespace)
             else:
@@ -141,6 +147,29 @@ class D2LogsSuggestions:
             "event_orgUnit": response.get("orgUnit"),
             "event_program": response.get("program"),
             "event_trackedEntity": response.get("trackedEntityInstance"),
+        }
+
+        return namespace
+
+    def _get_tracked_entity_namespace(self, tei_id: str):
+        try:
+            response = self.api.get(
+                path=f"/api/tracker/trackedEntities/{tei_id}",
+                params=[("fields", "*,enrollments")],
+                response_model=DictResponse,
+            ).root
+        except requests.exceptions.HTTPError as e:
+            print(f"Error fetching event {tei_id}: {e}")
+            return None
+
+        enrollments = response.get("enrollments", [])
+        enrollment = enrollments[0] if enrollments else None
+
+        namespace: dict[str, Optional[str]] = {
+            "tracked_entity_id": tei_id,
+            "tracked_entity_enrollment": enrollment.get("enrollment") if enrollment else None,
+            "tracked_entity_orgUnit": response.get("orgUnit"),
+            "tracked_entity_program": enrollment.get("program") if enrollment else None,
         }
 
         return namespace

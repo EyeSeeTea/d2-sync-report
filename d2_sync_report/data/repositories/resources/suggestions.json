@@ -46,8 +46,8 @@
     },
 
     {
-      "error": "Deletion of event {event_id} failed error:Attribute.value, message:Non-unique attribute value '{attribute_value}' for attribute {tracked_entity_attribute_id}",
-      "suggestion": "Event {event_id} could not be deleted because attribute value for attribute '{tracked_entity_attribute_name}' is not unique: {base_url}/dhis-web-capture/index.html#/enrollmentEventEdit?eventId={event_id}&orgUnitId={event_orgUnit}"
+      "error": "status=\"ERROR\" object_id=\"{tracked_entity_id}\" message=\"error:Attribute.value, message:Non-unique attribute value '{attribute_value}' for attribute {tracked_entity_attribute_id}\"",
+      "suggestion": "Check the value '{attribute_value}' for Tracked Entity Attribute '{tracked_entity_attribute_name}', it's not unique: {base_url}/dhis-web-capture/index.html#/enrollment?enrollmentId={tracked_entity_enrollment}&orgUnitId={tracked_entity_orgUnit}&programId={tracked_entity_program}&teiId={tracked_entity_id}"
     }
   ]
 }

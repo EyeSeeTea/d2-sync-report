@@ -66,4 +66,25 @@ request_mocks = [
             "trackedEntityInstance": "uyRjwOSJa5k",
         },
     ),
+    MockRequest(
+        method="GET",
+        path="/api/tracker/trackedEntities/uyRjwOSJa5k",
+        params=[("fields", "*,enrollments")],
+        response={
+            "trackedEntityInstance": "uyRjwOSJa5k",
+            "enrollments": [
+                {
+                    "enrollment": "pfDcyZw9bs1",
+                    "orgUnit": "RFe6Bei9Yek",
+                    "program": "jPRLZ8MJ86L",
+                }
+            ],
+        },
+    ),
+    MockRequest(
+        method="GET",
+        path="/api/trackedEntityAttributes",
+        params=[("fields", "id,name"), ("filter", "id:eq:OTpgZe5paFG")],
+        response={"trackedEntityAttributes": [{"id": "OTpgZe5paFG", "name": "Mock Attribute"}]},
+    ),
 ]

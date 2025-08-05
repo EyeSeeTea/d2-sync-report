@@ -29,7 +29,7 @@ Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violate
 
 Caused by: org.hibernate.ObjectNotFoundException: No row with the given identifier exists: [org.hisp.dhis.category.CategoryOptionCombo#1698861]
 
-* ERROR 2025-07-17T12:38:09,837 Sync against endpoint: EVENTS failed: ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='Deletion of event Bzyve9gtbyw failed', importCount=[imports=0, updates=0, ignores=1], conflicts={Attribute.value:Non-unique attribute value 'Ar011R' for attribute QPFgav8YHVb=ImportConflict{error:Attribute.value, message:Non-unique attribute value 'Ar011R' for attribute QPFgav8YHVb}}, dataSetComplete='null', reference='Bzyve9gtbyw', href='null'}]} (SyncUtils.java [taskScheduler-19])
+* ERROR 2025-07-17T12:38:09,837 Sync against endpoint: EVENTS failed: ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='null', importCount=[imports=0, updates=0, ignores=1], conflicts={Attribute.value:Non-unique attribute value 'Ar011R' for attribute OTpgZe5paFG=ImportConflict{error:Attribute.value, message:Non-unique attribute value 'Ar011R' for attribute OTpgZe5paFG}}, dataSetComplete='null', reference='uyRjwOSJa5k', href='null'}]} (SyncUtils.java [taskScheduler-19])
 
 * INFO  2025-07-17T12:38:09,837 Tracker programs data synchronization skipped. No new or updated TEIs found. (NotificationLoggerUtil.java [taskScheduler-24])
 * INFO  2025-07-17T12:38:09,837 [TRACKER_PROGRAMS_DATA_SYNC AqujRwbbik6] Process completed after 0.109s: Tracker programs data synchronization skipped. No new or updated TEIs found. (ControlledJobProgress.java [taskScheduler-24])

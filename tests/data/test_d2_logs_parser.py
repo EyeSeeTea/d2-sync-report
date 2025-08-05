@@ -250,26 +250,17 @@ def test_no_row_with_given_identifier_exists():
     )
 
 
-"""
-{
-      "error": "Deletion of event {event_id} failed error:Attribute.value, message:Non-unique attribute value '{attribute_value}' for attribute {tracked_entity_attribute_id}",
-      "suggestion": "Event {event_id} could not be deleted because attribute value for attribute '{tracked_entity_attribute_name}' is not unique: {base_url}/dhis-web-capture/index.html#/enrollmentEventEdit?eventId={event_id}&orgUnitId={event_orgUnit}"
-    }
-    """
-
-
 def test_event_could_not_be_deleted_due_to_non_unique_attribute_value():
     report = get_report_with_error_and_suggestions()
 
     assert_report_entry(
         report,
         error=[
-            "Deletion of event",
             "Non-unique attribute value",
             "Ar011R",
         ],
         suggestion=[
-            "/dhis-web-capture/index.html#/enrollmentEventEdit?eventId=Bzyve9gtbyw&orgUnitId=RFe6Bei9Yek",
+            "/dhis-web-capture/index.html#/enrollment?enrollmentId=pfDcyZw9bs1&orgUnitId=RFe6Bei9Yek&programId=jPRLZ8MJ86L&teiId=uyRjwOSJa5k",
         ],
     )
 
