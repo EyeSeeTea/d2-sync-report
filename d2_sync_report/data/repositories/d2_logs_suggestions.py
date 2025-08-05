@@ -1,7 +1,7 @@
-from pathlib import Path
 import re
 import json
-from typing import Any, TypedDict, Optional, List
+from pathlib import Path
+from typing import Any, Literal, TypedDict, Optional, List
 from string import Formatter
 from importlib.resources import files
 
@@ -98,36 +98,41 @@ class D2LogsSuggestions:
             plural_name = camel_name + "s"
 
             if plural_name == "events":
-                response = self.api.get(
-                    path=f"/api/events/{object_id}",
-                    response_model=DictResponse,
-                ).root
-
-                #  "suggestion": "Uncomplete this enrollment for event {event_id} to sync: {base_url}/dhis-web-capture/index.html#/enrollment?enrollmentId={event_enrollment}&orgUnitId={event_orgUnit}&programId={event_program}&teiId={event_trackedEntity}"
-                namespace: dict[str, Optional[str]] = {
-                    "event_id": object_id,
-                    "event_enrollment": response.get("enrollment"),
-                    "event_orgUnit": response.get("orgUnit"),
-                    "event_program": response.get("program"),
-                    "event_trackedEntity": response.get("trackedEntityInstance"),
-                }
-
+                namespace = self._get_event_namespace(object_id)
                 result.update(namespace)
             else:
-                response = self.api.get(
-                    path=f"/api/{plural_name}",
-                    response_model=DictResponse,
-                    params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
-                ).root
-
-                entities = response.get(plural_name, [])
-
-                if entities and "name" in entities[0]:
-                    result[name_key] = entities[0]["name"]
-                else:
-                    result[name_key] = object_id
+                entity = self._get_metadata_entity(object_id, plural_name)
+                result[name_key] = entity["name"] if entity and "name" in entity else None
 
         return result
+
+    def _get_metadata_entity(
+        self, object_id: str, plural_name: str
+    ) -> Optional[dict[Literal["name"], str]]:
+        response = self.api.get(
+            path=f"/api/{plural_name}",
+            response_model=DictResponse,
+            params=[("fields", "id,name"), ("filter", f"id:eq:{object_id}")],
+        ).root
+
+        entities = response.get(plural_name, [])
+        return entities[0] if entities else None
+
+    def _get_event_namespace(self, event_id: str):
+        response = self.api.get(
+            path=f"/api/events/{event_id}",
+            response_model=DictResponse,
+        ).root
+
+        namespace: dict[str, Optional[str]] = {
+            "event_id": event_id,
+            "event_enrollment": response.get("enrollment"),
+            "event_orgUnit": response.get("orgUnit"),
+            "event_program": response.get("program"),
+            "event_trackedEntity": response.get("trackedEntityInstance"),
+        }
+
+        return namespace
 
 
 target_dir = Path("/tmp/d2-sync-report-resources")
