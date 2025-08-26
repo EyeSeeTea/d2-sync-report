@@ -6,6 +6,9 @@ build/
 *.egg-info/
 venv
 *.code-workspace
-tests/logs/
+tests/ocb-logs/
+tests/playground
 /*.sh
 cache.json  
+/bak
+/.bak

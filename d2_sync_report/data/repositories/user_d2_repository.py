@@ -3,7 +3,6 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from d2_sync_report.data import dhis2_api
-from d2_sync_report.domain.entities.instance import Instance
 from d2_sync_report.domain.entities.user import User
 from d2_sync_report.domain.repositories.user_repository import UserRepository
 
@@ -16,8 +15,8 @@ class UsersResponse(BaseModel):
 
 
 class UserD2Repository(UserRepository):
-    def __init__(self, instance: Instance):
-        self.instance = instance
+    def __init__(self, api: dhis2_api.D2Api):
+        self.api = api
 
     def get_list_by_group(
         self, name: Optional[str] = None, code: Optional[str] = None
@@ -27,9 +26,7 @@ class UserD2Repository(UserRepository):
             *([("filter", f"userGroups.name:eq:{name}")] if name else []),
         ]
 
-        response = dhis2_api.request(
-            instance=self.instance,
-            method="GET",
+        response = self.api.get(
             path="/api/users",
             params=[("fields", "id,email"), *filters],
             response_model=UsersResponse,

@@ -1,0 +1,53 @@
+{
+  "mappings": [
+    {
+      "error": "object_id=\"{program_id}\" message=\"Program is not assigned to this Organisation Unit: {organisation_unit_id}\"",
+      "suggestion": "Go to Maintenance App, click on section PROGRAM, search for program '{program_name}', edit, click on step [4] Acccess, search organisation unit '{organisation_unit_name}', select it, and save the program: {base_url}/dhis-web-maintenance/index.html#/edit/programSection/program/{program_id}"
+    },
+
+    {
+      "error": "Detail: Key (username)=({username}) already exists",
+      "suggestion": "User with username '{username}' already exists. Go to {base_url}/dhis-web-user/index.html#/users?query={username} and delete it"
+    },
+
+    {
+      "error": "duplicate key value violates unique constraint \"{psql_constraint}\" - Detail: Key (uid)=({note_uid}) already exists",
+      "suggestion": "Due to a known DHIS2 bug [DHIS2-12887], enrollments and events that include notes/comments (via the 'Comments about this enrollment' widget) fail to sync after they have been created on the server. To resolve this issue, run this command to remove the association (not the note itself): `docker exec -i {docker_container} psql -U dhis dhis --set=constraint_name='{psql_constraint}' --set=note_uid='{note_uid}' < {resources_folder}/delete-tracker-note.sql`"
+    },
+
+    {
+      "error": "Period: `{period}` is not open for this data set at this time: `{data_set_id}`",
+      "suggestion": "Go to Maintenance App, click on section DATA SET, search for data set '{data_set_name}', edit, click on button DATA INPUT PERIODS, add period '{period}`, close the window and save the data set: {base_url}/dhis-web-maintenance/index.html#/edit/dataSetSection/dataSet/{data_set_id}"
+    },
+
+    {
+      "error": "Value '{option_code}' is not a valid option code of option set: {option_set_id}",
+      "suggestion": "Go to Maintenance App, click on section OTHER, then `Option set` in the left sidebar, search for option set '{option_set_name}', edit, click on tab OPTIONS, and add an option with code '{option_code}': {base_url}/dhis-web-maintenance/index.html#/edit/otherSection/optionSet/{option_set_id}/options"
+    },
+
+    {
+      "error": "Category option combo not found or not accessible for writing data: `{category_option_combo_id}`",
+      "suggestion": "Category option combo `{category_option_combo_name}` [{category_option_combo_id}] does not exist on the remote server or the sync user has no rights to write data to it. A category option combo has no sharings, it's inherited from its category options, so we need to update these sharings. Note that you will need also the clear the application cache for new sharing to apply. Steps: 1) Go to Maintenance App, click on section CATEGORY, then `Category option` in the left sidebar, and search for all the category options ('{category_option_combo_name}'), double-click, Sharing Settings, set Data -> Can Capture and view for the sync user: {base_url}/dhis-web-maintenance/index.html#/edit/categorySection/categoryOption. 2) Go to the Data Administration App, section Maintenance, check Clear application cache and click Perform maintenance."
+    },
+
+    {
+      "error": "object_id=\"{event_id}\" message=\"object='Event', value='Not possible to add event to a completed enrollment",
+      "suggestion": "Uncomplete this enrollment for event {event_id} to sync: {base_url}/dhis-web-capture/index.html#/enrollment?enrollmentId={event_enrollment}&orgUnitId={event_orgUnit}&programId={event_program}&teiId={event_trackedEntity}"
+    },
+
+    {
+      "error": "object_id=\"{event_id}\" message=\"Program stage is not repeatable and an event already exists",
+      "suggestion": "Event {event_id} already exists in a non-repeatable stage in the remote server. Review if that event should be deleted in the remove or local servers: {base_url}/dhis-web-capture/index.html#/enrollmentEventEdit?eventId={event_id}&orgUnitId={event_orgUnit}"
+    },
+
+    {
+      "error": "No row with the given identifier exists",
+      "suggestion": "The error 'No row with the given identifier exists' may have different causes. Check the exact error above for more details. Sometimes, it's a transient error that can be solved by restarting the DHIS2 instance, in others it's a problem with the metadata that must be manually explored"
+    },
+
+    {
+      "error": "status=\"ERROR\" object_id=\"{tracked_entity_id}\" message=\"error:Attribute.value, message:Non-unique attribute value '{attribute_value}' for attribute {tracked_entity_attribute_id}\"",
+      "suggestion": "Check the value '{attribute_value}' for Tracked Entity Attribute '{tracked_entity_attribute_name}', it's not unique: {base_url}/dhis-web-capture/index.html#/enrollment?enrollmentId={tracked_entity_enrollment}&orgUnitId={tracked_entity_orgUnit}&programId={tracked_entity_program}&teiId={tracked_entity_id}"
+    }
+  ]
+}

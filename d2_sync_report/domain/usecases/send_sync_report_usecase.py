@@ -1,70 +1,175 @@
 from datetime import datetime
 from typing import List, Optional
 
+from d2_sync_report.domain.entities.instance import Instance
 from d2_sync_report.domain.entities.message import Message
-from d2_sync_report.domain.entities.scheduled_sync_report import (
-    ScheduledSyncReport,
-    ScheduledSyncReportItem,
+from d2_sync_report.domain.entities.metadata_versioning import MetadataVersioning
+from d2_sync_report.domain.entities.sync_job_report import (
+    SyncJobReport,
+    SyncJobReportItem,
+    SyncJobType,
 )
+from d2_sync_report.domain.entities.sync_job_report_execution import SyncJobReportExecution
 from d2_sync_report.domain.repositories.message_repository import MessageRepository
-from d2_sync_report.domain.repositories.scheduled_sync_report_repository import (
-    ScheduledSyncReportRepository,
+from d2_sync_report.domain.repositories.metadata_versioning_repository import (
+    MetadataVersioningRepository,
+)
+from d2_sync_report.domain.repositories.sync_job_report_execution_repository import (
+    SyncJobReportExecutionRepository,
+)
+from d2_sync_report.domain.repositories.sync_job_report_repository import (
+    SyncJobReportRepository,
 )
 from d2_sync_report.domain.repositories.user_repository import UserRepository
 
 
 class SendSyncReportUseCase:
+    message_subject = "DHIS2 Sync Job Report"
+
     def __init__(
         self,
-        scheduled_sync_report_repository: ScheduledSyncReportRepository,
+        sync_job_report_execution_repository: SyncJobReportExecutionRepository,
+        sync_job_report_repository: SyncJobReportRepository,
+        metadata_versioning_repository: MetadataVersioningRepository,
         user_repository: UserRepository,
         message_repository: MessageRepository,
     ):
-        self.scheduled_sync_report = scheduled_sync_report_repository
+        self.sync_job_report_execution_repository = sync_job_report_execution_repository
+        self.sync_job_report = sync_job_report_repository
+        self.metadata_versioning_repository = metadata_versioning_repository
         self.user_repository: UserRepository = user_repository
         self.message_repository: MessageRepository = message_repository
 
     def execute(
         self,
-        user_group_name_to_send: str,
-        skip_message: bool,
-    ) -> ScheduledSyncReport:
-        users = self.user_repository.get_list_by_group(name=user_group_name_to_send)
-        user_emails = [user.email for user in users]
-        print(f"Users in group '{user_group_name_to_send}': {user_emails or 'NONE'}")
+        instance: Instance,
+        user_group_name_to_send: Optional[str],
+        skip_cache: bool,
+    ) -> SyncJobReport:
+        now = datetime.now()
+        user_emails = self.get_users_in_group(user_group_name_to_send)
+        since, reports = self.get_reports(skip_cache)
+        metadata_versioning = self.metadata_versioning_repository.get()
+        contents = self.get_message_contents(now, since, reports, instance, metadata_versioning)
 
-        reports = self.scheduled_sync_report.get_logs()
-        contents = "\n\n".join(self._format_report(report) for report in reports.items)
-
-        if not reports.items:
-            print("No reports found. Skip sending message")
-        elif skip_message:
-            print("Flag --skip-message is set. Skip sending message. Contents:\n")
+        if not user_emails:
             print(contents)
         else:
-            message = Message(
-                subject="Scheduled Sync Report",
-                text=contents,
-                recipients=user_emails,
-            )
+            message = Message(subject=self.message_subject, text=contents, recipients=user_emails)
             response = self.message_repository.send(message)
-            print(f"Server response: {response}")
+            print(f"Send email response: {response}")
 
+        self.save_cache(skip_cache, reports)
         return reports
 
-    def _format_report(self, report: ScheduledSyncReportItem) -> str:
+    def get_message_contents(
+        self,
+        now: datetime,
+        since: Optional[datetime],
+        reports: SyncJobReport,
+        instance: Instance,
+        metadata_versioning: MetadataVersioning,
+    ) -> str:
+        period = f"{format_datetime(since)} -> {format_datetime(now)}"
+
+        header = "\n".join(
+            [
+                f"Instance: {instance.url}",
+                f"Period: {period}",
+                f"Local Metadata: {metadata_versioning.local}",
+                f"Remote Metadata: {metadata_versioning.remote}",
+            ]
+        )
+
+        formatted_reports = (
+            "\n\n".join(self._format_report(instance, report) for report in reports.items)
+            or f"No sync jobs found: {period}"
+        )
+
+        return header + "\n\n\n" + formatted_reports
+
+    def get_reports(self, skip_cache: bool):
+        since = self.get_since_datetime(skip_cache)
+        print(f"Fetching reports since: {since or '-'}")
+        reports = self.sync_job_report.get(since=since)
+        return since, reports
+
+    def get_users_in_group(self, user_group_to_send: Optional[str]) -> Optional[List[str]]:
+        if not user_group_to_send:
+            return None
+        users = self.user_repository.get_list_by_group(name=user_group_to_send)
+        user_emails = [user.email for user in users]
+        print(f"Users in group '{user_group_to_send}': {user_emails or 'NONE'}")
+        return user_emails
+
+    def get_since_datetime(self, skip_cache: bool) -> Optional[datetime]:
+        last = None if skip_cache else self.sync_job_report_execution_repository.get_last()
+        return last.last_processed if last else None
+
+    def save_cache(self, skip_cache: bool, reports: SyncJobReport) -> None:
+        if not skip_cache:
+            self.sync_job_report_execution_repository.save_last(
+                SyncJobReportExecution(
+                    last_processed=reports.last_processed,
+                    last_sync=datetime.now(),
+                )
+            )
+
+    def _format_report(self, instance: Instance, report: SyncJobReportItem) -> str:
         indent = " " * 2
 
         parts: List[Optional[str]] = [
-            f"Type: {report.type}",
+            f"Type: {report_type_names[report.type]}",
             f"Status: {"SUCCESS" if report.success else "ERROR"}",
             f"Start: {format_datetime(report.start)}",
             f"End: {format_datetime(report.end)}",
         ]
 
-        errors = f"Errors:\n{indent}{f"\n{indent}".join(report.errors)}" if report.errors else ""
+        def add_index(group: List[str], msg: str, idx: int) -> str:
+            return indent + f"[{idx + 1}/{len(group)}] {msg}"
 
-        return " | ".join(compact(parts)) + errors
+        errors_str = (
+            "\n".join(
+                [
+                    "Errors:",
+                    *[
+                        add_index(report.errors, error, idx)
+                        for (idx, error) in enumerate(report.errors)
+                    ],
+                ]
+            )
+            if report.errors
+            else ""
+        )
+
+        suggestions_str = (
+            "\n".join(
+                [
+                    "Suggestions:",
+                    *[
+                        add_index(report.suggestions, suggestion, idx)
+                        for idx, suggestion in enumerate(report.suggestions)
+                    ],
+                ]
+            )
+            if report.suggestions
+            else ""
+        )
+
+        return (
+            "\n".join(compact(parts))
+            + "\n"
+            + errors_str
+            + ("\n" + suggestions_str if suggestions_str else "")
+        )
+
+
+report_type_names: dict[SyncJobType, str] = {
+    SyncJobType.AGGREGATED: "Data synchronization",
+    SyncJobType.EVENT_PROGRAMS: "Event programs data sync",
+    SyncJobType.TRACKER_PROGRAMS: "Tracker programs data sync",
+    SyncJobType.METADATA: "Metadata synchronization",
+}
 
 
 def compact(xs: list[str | None]) -> list[str]:
@@ -72,6 +177,6 @@ def compact(xs: list[str | None]) -> list[str]:
     return [x for x in xs if x is not None]
 
 
-def format_datetime(dt: datetime) -> str:
+def format_datetime(dt: Optional[datetime], if_empty: str = "NO-DATE") -> str:
     """Format datetime to string in the format YYYY-MM-DD HH:MM:SS."""
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
+    return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else if_empty

@@ -7,6 +7,29 @@
 * INFO  2025-07-17T12:38:09,832 [TRACKER_PROGRAMS_DATA_SYNC AqujRwbbik6] Stage started: Counting TEIs to synchronise (ControlledJobProgress.java [taskScheduler-24])
 * INFO  2025-07-17T12:38:09,837 TrackedEntityInstances last changed before Thu Jan 01 01:00:00 CET 1970 will not be synchronized. (NotificationLoggerUtil.java [taskScheduler-24])
 * INFO  2025-07-17T12:38:09,837 [TRACKER_PROGRAMS_DATA_SYNC AqujRwbbik6] Stage completed after 0.005s: TrackedEntityInstances last changed before Thu Jan 01 01:00:00 CET 1970 will not be synchronized. (ControlledJobProgress.java [taskScheduler-24])
-* ERROR 2025-07-17T12:38:09,837 Sync against endpoint: EVENTS failed: ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='Program is not assigned to this Organisation Unit: WA5iEXjqCnS', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='ZOkh9BeNXYF', href='null'}]} (SyncUtils.java [taskScheduler-19])
+
+* ERROR 2025-07-17T12:38:09,837 Sync against endpoint: EVENTS failed: ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='Program is not assigned to this Organisation Unit: WA5iEXjqCnS', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='Gq942x50jWX', href='null'}]} (SyncUtils.java [taskScheduler-19])
+
+Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_userinfo_username"
+  Detail: Key (username)=(Claude.KWITONDA) already exists
+
+* ERROR 2025-07-17T12:38:09,837 Sync against endpoint DATA_VALUE_SETS failed. ImportSummary: ImportSummary{status=WARNING, description='Import process completed successfully', importCount=[imports=926, updates=0, ignores=74], conflicts={E7643:2025W27:h3zkiErOoFl=ImportConflict{error:E7643, message:Period: `2025W27` is not open for this data set at this time: `h3zkiErOoFl`}}, dataSetComplete='false', reference='null', href='null'} (SyncUtils.java [taskScheduler-11])
+
+* ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='null', importCount=[imports=0, updates=0, ignores=1], conflicts={WVq6Gnf3Qvq:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk=ImportConflict{error:WVq6Gnf3Qvq, message:Value 'kenema_other_chiefdoms_outside_kenema_district_itf' is not a valid option code of option set: CTZmCZx5nOk}}, dataSetComplete='null', reference='HFxbAFNOYqb', href='null'} (SyncUtils.java [taskScheduler-11])
+
+* ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummary{status=WARNING, description='Import process completed successfully', importCount=[imports=933, updates=8, ignores=53], conflicts={E7613:zUs1ja0c8zT=ImportConflict{error:E7613, message:Category option combo not found or not accessible for writing data: `zUs1ja0c8zT`}}, dataSetComplete='false', reference='null', href='null'} (SyncUtils.java [taskScheduler-1])
+
+Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uk_t94h9p111tcydbm6je22tla52"
+  Detail: Key (uid)=(NtwUZWYlhxt) already exists
+
+
+* ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummary{status=ERROR, description='null', importCount=[imports=0, updates=0, ignores=1], conflicts=[ImportConflict{object='Event', value='Not possible to add event to a completed enrollment. Event created date ( Fri Sep 15 00:00:00 CEST 2023 ) is after enrollment completed date ( Fri Aug 18 00:00:00 CEST 2023 ).'}], dataSetComplete='null', reference='Bzyve9gtbyw', href='null'} (SyncUtils.java [taskScheduler-1])
+
+* ERROR 2025-07-17T12:38:09,837 Sync summary: ImportSummary{status=ERROR, description='Program stage is not repeatable and an event already exists', importCount=[imports=0, updates=0, ignores=1], conflicts={}, dataSetComplete='null', reference='Bzyve9gtbyw', href='null'} (SyncUtils.java [taskScheduler-1])
+
+Caused by: org.hibernate.ObjectNotFoundException: No row with the given identifier exists: [org.hisp.dhis.category.CategoryOptionCombo#1698861]
+
+* ERROR 2025-07-17T12:38:09,837 Sync against endpoint: EVENTS failed: ImportSummaries: ImportSummaries{importSummaries=[ImportSummary{status=ERROR, description='null', importCount=[imports=0, updates=0, ignores=1], conflicts={Attribute.value:Non-unique attribute value 'Ar011R' for attribute OTpgZe5paFG=ImportConflict{error:Attribute.value, message:Non-unique attribute value 'Ar011R' for attribute OTpgZe5paFG}}, dataSetComplete='null', reference='uyRjwOSJa5k', href='null'}]} (SyncUtils.java [taskScheduler-19])
+
 * INFO  2025-07-17T12:38:09,837 Tracker programs data synchronization skipped. No new or updated TEIs found. (NotificationLoggerUtil.java [taskScheduler-24])
 * INFO  2025-07-17T12:38:09,837 [TRACKER_PROGRAMS_DATA_SYNC AqujRwbbik6] Process completed after 0.109s: Tracker programs data synchronization skipped. No new or updated TEIs found. (ControlledJobProgress.java [taskScheduler-24])

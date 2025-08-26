@@ -9,5 +9,5 @@ class UserRepository(ABC):
     def get_list_by_group(
         self, name: Optional[str] = None, code: Optional[str] = None
     ) -> List[User]:
-        """Get users by group code"""
+        """Get users by group"""
         pass
