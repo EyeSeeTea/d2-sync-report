@@ -98,7 +98,7 @@ class SendSyncReportUseCase:
         if not user_group_to_send:
             return None
         users = self.user_repository.get_list_by_group(name=user_group_to_send)
-        user_emails = [user.email for user in users]
+        user_emails = compact([user.email for user in users])
         print(f"Users in group '{user_group_to_send}': {user_emails or 'NONE'}")
         return user_emails
 
