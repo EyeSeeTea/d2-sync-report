@@ -1,6 +1,6 @@
 [project]
 name = "d2-sync-report"
-version = "0.1.0"
+version = "0.1.1"
 description = "A DHIS2 sync status reporter CLI"
 authors = [{ name = "EyeSeeTea", email = "hello@eyeseetea.com" }]
 readme = "README.md"
