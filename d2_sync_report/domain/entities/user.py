@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
 class User:
     id: str
-    email: str
+    email: Optional[str] = None
 
 
 @dataclass

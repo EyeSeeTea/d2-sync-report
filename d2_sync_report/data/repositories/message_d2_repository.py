@@ -15,10 +15,6 @@ from d2_sync_report.domain.repositories.message_repository import MessageReposit
 
 
 class MessageD2Repository(MessageRepository):
-    # DHIS2 sends emails using query parameters in the POST request, so we
-    # need to restrict the message size to avoid 414 Request-URI Too Long errors.
-    max_length = 4000
-
     def __init__(self, api: dhis2_api.D2Api):
         self.api = api
 
@@ -26,15 +22,10 @@ class MessageD2Repository(MessageRepository):
         recipients = ", ".join(message.recipients) or "-"
         print(f"Email to {recipients}: {message.subject}\n\n{message.text}")
 
-        if len(message.text) > self.max_length:
-            clipped_message_text = message.text[: self.max_length - 3] + "..."
-        else:
-            clipped_message_text = message.text
-
         data = {
             "recipients": recipients,
             "subject": message.subject,
-            "message": clipped_message_text,
+            "message": message.text,
         }
 
         self.api.post(
