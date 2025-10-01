@@ -46,7 +46,9 @@ class Args:
             metavar="PATH",
         ),
     ] = None
-
+    include_only_errors: Annotated[
+        bool, arg(help="Include only errors in the report", default=False)
+    ] = False
     ignore_cache: Annotated[bool, arg(help="Ignore cached state", default=False)] = False
     notify_user_group: Annotated[
         Optional[str], arg(help="User group to send the report to", metavar="NAME or CODE")
@@ -69,6 +71,7 @@ def main() -> None:
         user_group_name_to_send=args.notify_user_group,
         skip_cache=args.ignore_cache,
         instance=instance,
+        include_only_errors=args.include_only_errors,
     )
 
 

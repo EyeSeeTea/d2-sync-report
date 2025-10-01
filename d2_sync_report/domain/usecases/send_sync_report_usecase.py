@@ -45,12 +45,20 @@ class SendSyncReportUseCase:
         instance: Instance,
         user_group_name_to_send: Optional[str],
         skip_cache: bool,
+        include_only_errors: bool,
     ) -> SyncJobReport:
         now = datetime.now()
         user_emails = self.get_users_in_group(user_group_name_to_send)
         since, reports = self.get_reports(skip_cache)
         metadata_versioning = self.metadata_versioning_repository.get()
-        contents = self.get_message_contents(now, since, reports, instance, metadata_versioning)
+        contents: str = self.get_message_contents(
+            now=now,
+            since=since,
+            reports=reports,
+            instance=instance,
+            metadata_versioning=metadata_versioning,
+            include_only_errors=include_only_errors,
+        )
 
         if not user_emails:
             print(contents)
@@ -64,11 +72,13 @@ class SendSyncReportUseCase:
 
     def get_message_contents(
         self,
+        *,
         now: datetime,
         since: Optional[datetime],
         reports: SyncJobReport,
         instance: Instance,
         metadata_versioning: MetadataVersioning,
+        include_only_errors: bool,
     ) -> str:
         period = f"{format_datetime(since)} -> {format_datetime(now)}"
 
@@ -81,8 +91,12 @@ class SendSyncReportUseCase:
             ]
         )
 
+        reports_to_include = (
+            report for report in reports.items if not include_only_errors or not report.success
+        )
+
         formatted_reports = (
-            "\n\n".join(self._format_report(instance, report) for report in reports.items)
+            "\n\n".join(self._format_report(report) for report in reports_to_include)
             or f"No sync jobs found: {period}"
         )
 
@@ -115,7 +129,7 @@ class SendSyncReportUseCase:
                 )
             )
 
-    def _format_report(self, instance: Instance, report: SyncJobReportItem) -> str:
+    def _format_report(self, report: SyncJobReportItem) -> str:
         indent = " " * 2
 
         parts: List[Optional[str]] = [
