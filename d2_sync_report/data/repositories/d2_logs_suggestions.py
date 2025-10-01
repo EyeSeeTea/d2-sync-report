@@ -57,7 +57,7 @@ class D2LogsSuggestions:
     ## Private methods
 
     def _get_error_mappings_from_file(self, file_path: str) -> List[ErrorMapping]:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             data = json.load(file)
 
         return data.get("mappings", [])

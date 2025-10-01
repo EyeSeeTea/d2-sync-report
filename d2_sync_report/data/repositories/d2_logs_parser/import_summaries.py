@@ -52,7 +52,7 @@ def parse_import_summaries(line: str) -> List[ImportSummary]:
     summaries: List[ImportSummary] = []
 
     for block in summary_blocks:
-        # An orthodox parsing would use a proper grammar parser, let's keep it simple and use regexps.
+        # We could use a proper grammar parser, but let's keep it simple and use regexps
         status_match = re.search(r"status=(\w+)", block)
         description_match = re.search(r"description='(.*?)'", block)
         import_count_match = re.search(r"importCount=\[(.*?)\]", block)

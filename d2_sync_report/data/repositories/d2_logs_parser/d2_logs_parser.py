@@ -20,7 +20,7 @@ from d2_sync_report.utils.uniq import uniq
 """
 This class parses the DHIS2 logs to extract synchronization job reports.
 
-As we have a single log file that aggregates any action in the instance, we'd like the ability to 
+As we have a single log file that aggregates any action in the instance, we'd like the ability to
 isolate which sync job they belong to. Some log lines can indeed be fully discriminated,
 using the section (e.g. "EVENT_PROGRAMS_DATA_SYNC"), but others (like low-level error messages)
 are not tagged.
@@ -40,7 +40,7 @@ class D2LogsParser:
 
     def get(self, since: Optional[datetime] = None) -> SyncJobReport:
         log_files = self._get_log_files()
-        print(f"Reading logs from: {", ".join(log_files)}")
+        print(f"Reading logs from: {', '.join(log_files)}")
 
         def get_log_entries() -> Iterator[LogEntry]:
             for log_file in log_files:
@@ -89,7 +89,7 @@ class D2LogsParser:
     ) -> Iterator[LogEntry]:
         parse = False if since else True
 
-        with open(logs_file_path, "r", encoding="utf-8") as file:
+        with open(logs_file_path, encoding="utf-8") as file:
             for line0 in file:
                 line = line0.strip()
                 entry = self._get_log_entry(line)
@@ -108,7 +108,7 @@ class D2LogsParser:
     ) -> Tuple[List[SyncJobReportItem], Optional[datetime]]:
         initial_state = SyncJobParserState.initial()
 
-        # Sync jobs can run in parallel, so reduce parsers isolatedly and aggregate results at the end.
+        # Sync jobs can run in parallel, so reduce parsers independently and aggregate at the end
 
         initial_compositite_state = ReducersState(
             initial_state, initial_state, initial_state, initial_state

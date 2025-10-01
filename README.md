@@ -77,6 +77,7 @@ $ d2-sync-report \
 
 ```shell
 $ .venv/bin/hatch run test
+$ .venv/bin/hatch run prettify
 $ .venv/bin/hatch run lint
 $ .venv/bin/hatch run cli
 ```

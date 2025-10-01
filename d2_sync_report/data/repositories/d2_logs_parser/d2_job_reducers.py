@@ -82,7 +82,7 @@ class D2JobReducers:
             state, matcher, SyncJobType.METADATA, delimiters, section=False
         )
 
-    # Logs parsing is very similar for all syncs, just some tags and the start/close delimiters change.
+    # Parsing is similar for all syncs, only some tags and the start/close delimiters change.
     # So, to keep it DRY, let's create a generic reducer that can handle all sync jobs.
     def _generic_sync_reducer(
         self,

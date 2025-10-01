@@ -134,7 +134,7 @@ class SendSyncReportUseCase:
 
         parts: List[Optional[str]] = [
             f"Type: {report_type_names[report.type]}",
-            f"Status: {"SUCCESS" if report.success else "ERROR"}",
+            f"Status: {'SUCCESS' if report.success else 'ERROR'}",
             f"Start: {format_datetime(report.start)}",
             f"End: {format_datetime(report.end)}",
         ]
