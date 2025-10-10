@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from d2_sync_report.data.dhis2_api import D2Api
 from d2_sync_report.domain.entities.metadata_versioning import MetadataVersioning
@@ -21,7 +22,7 @@ class MetadataVersioningD2Repository(MetadataVersioningRepository):
 
     def get_remote_metadata_version(self) -> str:
         res = self.api.get("/api/systemSettings", SystemSettingsResponse)
-        return res.keyRemoteMetadataVersion
+        return res.keyRemoteMetadataVersion or "NONE"
 
 
 class MetadataVersionResponse(BaseModel):
@@ -30,4 +31,4 @@ class MetadataVersionResponse(BaseModel):
 
 
 class SystemSettingsResponse(BaseModel):
-    keyRemoteMetadataVersion: str
+    keyRemoteMetadataVersion: Optional[str] = None
