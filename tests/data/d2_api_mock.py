@@ -1,11 +1,10 @@
-from typing import Literal, Type, TypeVar, Optional, Mapping
+from typing import List, Tuple, Literal, Type, TypeVar, Optional, Mapping, Any
 
 from pydantic import BaseModel
 from d2_sync_report.data.dhis2_api import D2Api, Data, Params
 from d2_sync_report.domain.entities.instance import Instance, PersonalTokenAccessAuth
 
 from dataclasses import dataclass
-from typing import Literal, Optional, List, Tuple, Mapping, Any
 
 
 @dataclass(frozen=True)
@@ -40,7 +39,7 @@ class D2ApiMock(D2Api):
         path: str,
         response_model: Type[T],
         params: Params = None,
-        data: Data = None,
+        data: Data = None,  # noqa: ARG002 - unused in this implementation
     ) -> T:
         for expectation in self.expectations:
             if (
