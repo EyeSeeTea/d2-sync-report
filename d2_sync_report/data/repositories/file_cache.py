@@ -25,7 +25,7 @@ class FileCache(Generic[Props]):
         if os.path.exists(cache_path):
             print(f"Cache loaded: {cache_path}")
             try:
-                with open(cache_path, "r", encoding="utf-8") as f:
+                with open(cache_path, encoding="utf-8") as f:
                     data = f.read()
                 cache_props = self.props_class.model_validate_json(data)
                 print(f"Cache: {cache_props}")

@@ -23,6 +23,8 @@ $ .venv/bin/pip install -e . # install d2-sync-report from sources
 $ .venv/bin/d2-sync-report # Check that it works
 ```
 
+**Note:** The script at [`scripts/d2-sync-report-setup.sh`](scripts/d2-sync-report-setup.sh) shows how to install the package and set up a daily cron job on Debian/Ubuntu systems.
+
 ## Usage
 
 ```shell
@@ -77,6 +79,7 @@ $ d2-sync-report \
 
 ```shell
 $ .venv/bin/hatch run test
+$ .venv/bin/hatch run prettify
 $ .venv/bin/hatch run lint
 $ .venv/bin/hatch run cli
 ```
