@@ -57,7 +57,7 @@ class D2ApiReal(D2Api):
         params: Params = None,
         data: Data = None,
     ) -> T:
-        url = urljoin(self.instance.url, path)
+        url = urljoin(self.instance.url.rstrip("/") + "/", path.lstrip("/"))
         headers = get_headers(self.instance.auth)
         response = requests.request(method, url, params=params, headers=headers, data=data)
 
