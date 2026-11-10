@@ -1,6 +1,5 @@
 from tests.data.d2_api_mock import MockRequest
 
-
 request_mocks = [
     ## Metadata
     MockRequest(

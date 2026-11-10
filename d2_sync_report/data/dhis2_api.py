@@ -7,7 +7,6 @@ from pydantic import BaseModel, RootModel
 
 from d2_sync_report.domain.entities.instance import Auth, Instance
 
-
 T = TypeVar("T", bound=BaseModel)
 
 

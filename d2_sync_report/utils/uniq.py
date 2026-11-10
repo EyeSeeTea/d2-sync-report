@@ -1,6 +1,5 @@
 from typing import List, Set, TypeVar
 
-
 T = TypeVar("T")
 
 
