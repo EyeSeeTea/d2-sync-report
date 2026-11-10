@@ -1,6 +1,10 @@
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 from typing import List
 from d2_sync_report.data.repositories.d2_logs_parser.import_summaries import parse_import_summaries
+from d2_sync_report.data.repositories.d2_logs_parser.metadata_sync_summary import (
+    parse_metadata_sync_summary,
+)
 from d2_sync_report.data.repositories.d2_logs_parser.job_reducer_types import (
     SyncJobParserInProgress,
     LogEntry,
@@ -13,13 +17,16 @@ from d2_sync_report.utils.uniq import uniq
 @dataclass
 class Delimiters:
     """
-    Patters that identify the start and end (success or error) of sync jobs.
+    Patters that identify the start and end (success or error) of sync jobs,
+    and the job progress lines that hold an error message.
     To be used in the generic sync reducer.
     """
 
     open: List[str]
     close_success: List[str]
     close_error: List[str]
+    # Job progress lines whose message is the error, i.e. "Stage failed after 0.3s: <message>"
+    error_messages: List[str] = field(default_factory=list)
 
 
 class D2JobReducers:
@@ -72,10 +79,19 @@ class D2JobReducers:
     ) -> SyncJobParserState:
         matcher = LogEntryReducer(state, log_entry, section="META_DATA_SYNC")
 
+        # On failure, DHIS2 logs one of the close_error messages: after retries are exhausted or
+        # on an unexpected exception (no "Metadata sync cron job ended" is logged then), or when
+        # aborting after a failed version import (logged before "Metadata sync cron job ended").
         delimiters = Delimiters(
             open=["Metadata Sync cron Job started"],
             close_success=["Metadata sync cron job ended"],
-            close_error=[],
+            close_error=[
+                "Metadata Sync failed!",
+                "Exception occurred while executing metadata sync task",
+                "Aborting Metadata sync",
+            ],
+            # The cause of a failed metadata import is only logged as a job progress failure
+            error_messages=["Stage failed after"],
         )
 
         return self._generic_sync_reducer(
@@ -103,6 +119,12 @@ class D2JobReducers:
         # Search for error closer string (i.e: "Tracker programs data synchronization failed")
         elif any(matcher.matches(close, section) for close in delimiters.close_error):
             return matcher.close_sync_job(success=False)
+        # Search for job progress error (i.e: "Stage failed after 0.3s: <message>"), these lines
+        # are always tagged with the section, even for jobs that use section=False for delimiters
+        elif any(matcher.matches(msg, section=True) for msg in delimiters.error_messages):
+            return matcher.add_failed_stage_error()
+        elif matcher.matches_metadata_sync_summary():
+            return matcher.parse_metadata_sync_summary()
         # Refactor: no matches+parse -> parse1() or parse2() or ... -> add_error of that output
         elif matcher.matches_import_summaries():
             return matcher.parse_import_summaries()
@@ -144,6 +166,7 @@ class LogEntryReducer:
             return state
 
         errors = uniq(state.current.errors)
+        warnings = uniq(state.current.warnings)
 
         parsed = SyncJobReportItem(
             type=state.current.type,
@@ -151,6 +174,7 @@ class LogEntryReducer:
             start=state.current.start,
             end=log_entry.timestamp or state.current.start,
             errors=errors,
+            warnings=warnings,
             suggestions=[],
         )
 
@@ -169,10 +193,15 @@ class LogEntryReducer:
             return state
 
         return SyncJobParserState(
-            current=SyncJobParserInProgress(type=type, start=log_entry.timestamp, errors=[]),
+            current=SyncJobParserInProgress(
+                type=type, start=log_entry.timestamp, errors=[], warnings=[]
+            ),
             parsed_jobs=state.parsed_jobs,
             last_processed_timestamp=None,
         )
+
+    def matches_metadata_sync_summary(self):
+        return "MetadataSyncSummary{" in self.log_entry.text
 
     def matches_import_summaries(self):
         return "ImportSummary{" in self.log_entry.text
@@ -209,5 +238,28 @@ class LogEntryReducer:
 
         return state.add_errors(errors)
 
+    def parse_metadata_sync_summary(self) -> SyncJobParserState:
+        summary = parse_metadata_sync_summary(self.log_entry.text)
+        return self.state.add_errors(summary.format_errors()).add_warnings(
+            summary.format_warnings()
+        )
+
     def add_error(self):
         return self.state.add_errors([self.log_entry.text])
+
+    def add_failed_stage_error(self) -> SyncJobParserState:
+        """
+        Add the message of a job progress failure, without the prefix and the source suffix:
+
+           [META_DATA_SYNC aBcD9Zo0xrG] Stage failed after 0.3s: Some error (SomeFile.java [thread])
+        """
+        text = self.log_entry.text
+        match = re.search(r"failed after [^:]*: (.*?)(?: \([\w.]+ \[[^\]]*\]\))?$", text)
+        message = match.group(1) if match else text
+        errors = self.state.current.errors if self.state.current else []
+
+        # Skip repeated exceptions already added by "Caused by" lines
+        if any(message in error for error in errors):
+            return self.state
+        else:
+            return self.state.add_errors([message])

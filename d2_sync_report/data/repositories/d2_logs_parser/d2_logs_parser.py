@@ -61,7 +61,7 @@ class D2LogsParser:
         for item in items:
             suggestions = [
                 suggestion
-                for error in item.errors
+                for error in item.errors + item.warnings
                 for suggestion in self.d2_logs_suggestions.get_suggestions_from_error(error)
             ]
 

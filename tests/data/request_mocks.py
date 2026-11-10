@@ -38,6 +38,12 @@ request_mocks = [
     ),
     MockRequest(
         method="GET",
+        path="/api/users",
+        params=[("fields", "id,name"), ("filter", "id:eq:xE7jOejl9FI")],
+        response={"users": [{"id": "xE7jOejl9FI", "name": "John Traore"}]},
+    ),
+    MockRequest(
+        method="GET",
         path="/api/trackedEntityAttributes",
         params=[("fields", "id,name"), ("filter", "id:eq:QPFgav8YHVb")],
         response={"trackedEntityAttributes": [{"id": "QPFgav8YHVb", "name": "Mock Attribute"}]},

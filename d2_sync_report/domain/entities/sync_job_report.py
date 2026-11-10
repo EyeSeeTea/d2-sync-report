@@ -18,6 +18,8 @@ class SyncJobReportItem:
     start: datetime
     end: datetime
     errors: List[str]
+    # Problems that do not make the job fail (i.e. objects ignored in a best-effort import)
+    warnings: List[str]
     suggestions: List[str]
 
 

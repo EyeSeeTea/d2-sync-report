@@ -16,6 +16,7 @@ class SyncJobParserInProgress:
     type: SyncJobType
     start: datetime
     errors: List[str]
+    warnings: List[str]
 
 
 @dataclass
@@ -33,6 +34,14 @@ class SyncJobParserState:
             return self
         else:
             return replace(self, current=replace(self.current, errors=self.current.errors + errors))
+
+    def add_warnings(self, warnings: List[str]) -> "SyncJobParserState":
+        if not self.current:
+            return self
+        else:
+            return replace(
+                self, current=replace(self.current, warnings=self.current.warnings + warnings)
+            )
 
     def append_to_last_error(self, error: str) -> "SyncJobParserState":
         """
