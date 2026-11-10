@@ -139,43 +139,20 @@ class SendSyncReportUseCase:
             f"End: {format_datetime(report.end)}",
         ]
 
-        def add_index(group: List[str], msg: str, idx: int) -> str:
-            return indent + f"[{idx + 1}/{len(group)}] {msg}"
+        def format_group(title: str, group: List[str]) -> Optional[str]:
+            if not group:
+                return None
 
-        errors_str = (
-            "\n".join(
-                [
-                    "Errors:",
-                    *[
-                        add_index(report.errors, error, idx)
-                        for (idx, error) in enumerate(report.errors)
-                    ],
-                ]
-            )
-            if report.errors
-            else ""
-        )
+            lines = [indent + f"[{idx + 1}/{len(group)}] {msg}" for idx, msg in enumerate(group)]
+            return "\n".join([title + ":", *lines])
 
-        suggestions_str = (
-            "\n".join(
-                [
-                    "Suggestions:",
-                    *[
-                        add_index(report.suggestions, suggestion, idx)
-                        for idx, suggestion in enumerate(report.suggestions)
-                    ],
-                ]
-            )
-            if report.suggestions
-            else ""
-        )
+        groups = [
+            format_group("Errors", report.errors),
+            format_group("Warnings", report.warnings),
+            format_group("Suggestions", report.suggestions),
+        ]
 
-        return (
-            "\n".join(compact(parts))
-            + "\n"
-            + errors_str
-            + ("\n" + suggestions_str if suggestions_str else "")
-        )
+        return "\n".join(compact(parts)) + "\n" + "\n".join(compact(groups))
 
 
 report_type_names: dict[SyncJobType, str] = {

@@ -1,14 +1,16 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 dist/
 build/
 *.egg-info/
 venv
+.venv
 *.code-workspace
 tests/ocb-logs/
 tests/playground
 /*.sh
-cache.json  
+cache.json
 /bak
 /.bak

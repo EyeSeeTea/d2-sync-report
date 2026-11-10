@@ -88,6 +88,86 @@ def test_metadata_sync_error():
     assert len(report.errors) == 2
 
 
+def test_metadata_sync_failed():
+    # DHIS2 does not log "Metadata sync cron job ended" when the job fails
+    repository = get_repo(folder="metadata-synchronization-failed")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is False
+    assert_datetime_equals(report.start, datetime(2026, 10, 21, 11, 12, 15))
+    assert_datetime_equals(report.end, datetime(2026, 10, 21, 11, 13, 44))
+    assert report.errors == [
+        "Exception occurred while trying to import the metadata. not-null property references"
+        + " a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key"
+    ]
+    assert len(report.suggestions) == 1
+    assert report.suggestions[0].startswith("The metadata version includes an API token")
+
+
+def test_metadata_sync_duplicate_username():
+    repository = get_repo(folder="metadata-synchronization-duplicate-username")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is False
+    # The job progress failure ("Stage failed after: could not execute statement") repeats
+    # the message of the exception already logged, so it's not added as another error
+    assert report.errors == [
+        "Caused by: org.hibernate.exception.ConstraintViolationException: could not execute"
+        + " statement",
+        "Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique"
+        + ' constraint "uk_userinfo_username"'
+        + " - Detail: Key (username)=(admin-test) already exists.",
+    ]
+    # Usernames can contain characters other than letters, digits, "_" and "."
+    assert report.suggestions == [
+        "User with username 'admin-test' already exists. Go to"
+        + " https://mock-instance/dhis-web-user/index.html#/users?query=admin-test and delete it"
+    ]
+
+
+def test_metadata_sync_import_error():
+    # ATOMIC version: the import fails with status ERROR and the sync is aborted
+    repository = get_repo(folder="metadata-synchronization-import-error")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is False
+    assert report.errors == [
+        'version="Version_19" error_code="E5002" message="Invalid reference [OI69n5Ig2Tw]'
+        + ' (FileResource) on object John Traore [xE7jOejl9FI] (User) for association `avatar`"'
+    ]
+    assert report.warnings == []
+    assert len(report.suggestions) == 1
+    assert report.suggestions[0].startswith("User 'John Traore' [xE7jOejl9FI] has an avatar")
+
+
+def test_metadata_sync_import_warning():
+    # BEST_EFFORT version: the import succeeds with status WARNING, without the invalid reference
+    repository = get_repo(folder="metadata-synchronization-import-warning")
+    reports = repository.get().items
+
+    assert len(reports) == 1
+    report = reports[0]
+    assert report.type == "metadata"
+    assert report.success is True
+    assert report.errors == []
+    assert report.warnings == [
+        'version="Version_18" error_code="E5002" message="Invalid reference [fwZo9etl31C]'
+        + ' (FileResource) on object John Traore [xE7jOejl9FI] (User) for association `avatar`"'
+    ]
+    # Suggestions also apply to warnings
+    assert len(report.suggestions) == 1
+    assert report.suggestions[0].startswith("User 'John Traore' [xE7jOejl9FI] has an avatar")
+
+
 ## Test errors and suggestions
 
 
