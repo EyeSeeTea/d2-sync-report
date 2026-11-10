@@ -46,7 +46,7 @@ class D2LogsParser:
             for log_file in log_files:
                 yield from self._get_log_entries(log_file, since)
 
-        (items, last_processed) = self._get_log_report_items(get_log_entries())
+        items, last_processed = self._get_log_report_items(get_log_entries())
 
         self.d2_logs_suggestions.copy_resources()
 
