@@ -1,5 +1,8 @@
+import json
 import os
+import re
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from d2_sync_report.cli import get_default_suggestions_path
@@ -146,7 +149,7 @@ def test_metadata_sync_import_error():
     ]
     assert report.warnings == []
     assert len(report.suggestions) == 1
-    assert report.suggestions[0].startswith("User 'John Traore' [xE7jOejl9FI] has an avatar")
+    assert report.suggestions[0].startswith("A user in this metadata version has an avatar")
 
 
 def test_metadata_sync_import_warning():
@@ -165,7 +168,21 @@ def test_metadata_sync_import_warning():
     ]
     # Suggestions also apply to warnings
     assert len(report.suggestions) == 1
-    assert report.suggestions[0].startswith("User 'John Traore' [xE7jOejl9FI] has an avatar")
+    assert report.suggestions[0].startswith("A user in this metadata version has an avatar")
+
+
+def test_suggestions_reference_existing_scripts():
+    with open(suggestions_path) as file:
+        mappings = json.load(file)["mappings"]
+
+    scripts = [
+        script
+        for mapping in mappings
+        for script in re.findall(r"\{resources_folder\}/([\w.-]+)", mapping["suggestion"])
+    ]
+    resources_path = Path(suggestions_path).parent
+
+    assert [script for script in scripts if not (resources_path / script).is_file()] == []
 
 
 ## Test errors and suggestions

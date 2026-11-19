@@ -90,7 +90,6 @@ class D2JobReducers:
                 "Exception occurred while executing metadata sync task",
                 "Aborting Metadata sync",
             ],
-            # The cause of a failed metadata import is only logged as a job progress failure
             error_messages=["Stage failed after"],
         )
 

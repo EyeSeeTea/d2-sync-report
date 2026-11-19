@@ -51,13 +51,23 @@
     },
 
     {
-      "error": "[{user_id}] (User) for association `avatar`",
-      "suggestion": "User '{user_name}' [{user_id}] has an avatar on the central server; file resources are not part of metadata versions, so the reference is invalid. Remove the avatar of that user on the central server and create a new metadata version."
+      "error": "not-null property references a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key",
+      "suggestion": "The metadata version includes an API token. DHIS2 never exports the key of an API token, so the version cannot be imported (ATOMIC or BEST_EFFORT). To fix it: 1) On the central server, remove the API tokens from the metadata version in DB and update the hash. Then clear the application cache. 2) In this instance, delete the metadata version from the datastore, then clear the application cache."
     },
 
     {
-      "error": "not-null property references a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key",
-      "suggestion": "The metadata version includes an API token created on the central server. DHIS2 never exports the key of an API token, so that version cannot be imported, and every metadata sync will fail on it. To fix it: 1) On the central server, remove the API token (key 'apiToken') from the version package (datastore namespace METADATASTORE, key: the version name), and set the hash of the version (table metadataversion, column hashcode) to the MD5 of the new package, otherwise instances reject it as corrupted when downloading it. 2) In this instance, delete the copy of the version cached when it was first downloaded, so it is downloaded again: {base_url}/api/dataStore/METADATASTORE/<version name>."
+      "error": "version=\"{version}\" error_code=\"E4015\" message=\"Property `url` refers to an object that does not exist, could not find",
+      "suggestion": "Metadata version {version} includes documents uploaded as files on the central server. Files are not part of metadata versions, so these documents point to files that don't exist in this instance. In an ATOMIC version, the version is not imported, and the metadata sync stops at it until it is fixed. In a BEST_EFFORT version (reported as a warning), only these documents are skipped, and nothing needs to be done. To fix an ATOMIC version: 1) On the central server, remove the uploaded documents from the metadata version in DB and update the hash. Then clear the application cache. 2) In this instance, delete the metadata version from the datastore, then clear the application cache."
+    },
+
+    {
+      "error": "(User) for association `avatar`",
+      "suggestion": "A user in this metadata version has an avatar (profile picture) on the central server. Files are not part of metadata versions, so the avatar points to a file that doesn't exist in this instance. In an ATOMIC version, the version is not imported, and the metadata sync stops at it until it is fixed. In a BEST_EFFORT version (reported as a warning), the user is imported without the avatar, and nothing needs to be done. Removing the avatar and creating a new version doesn't fix an ATOMIC version: instances still have to import the broken version first. To fix it: 1) On the central server, remove the avatars of users from the metadata version in DB and update the hash. Then clear the application cache. 2) In this instance, delete the metadata version from the datastore, then clear the application cache."
+    },
+
+    {
+      "error": "could not initialize proxy [org.hisp.dhis.category.CategoryCombo#{category_combo_db}] - no Session",
+      "suggestion": "During a metadata sync, this error comes from an object updated by this version that uses data elements with Details disaggregation, usually a visualization. DHIS2 imported the metadata version, but failed right after the import, when it audited the object.The category combination of its details (internal id {category_combo_db}) was not loaded. The metadata itself is fine, but the version is not marked as imported, so the sync stops at it, and running the sync again fails the same way. To unblock this instance: 1) On the central server, fix the objects that use data elements with Details only disaggregation. 2) Update with the fixes the metadata version stored in DB and update the hash. Then clear the application cache. 2) In this instance, delete the metadata version from the datastore, then clear the application cache."
     }
   ]
 }
