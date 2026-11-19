@@ -6,7 +6,6 @@ from d2_sync_report.data import dhis2_api
 from d2_sync_report.domain.entities.user import User
 from d2_sync_report.domain.repositories.user_repository import UserRepository
 
-
 UserResponse = User
 
 

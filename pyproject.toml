@@ -53,3 +53,6 @@ prettify = "black d2_sync_report tests {args}"
 test = "pytest {args}"
 test-watch = "ptw --now --patterns '*.py,*.log' tests/ {args}"
 typecheck = "mypy d2_sync_report tests {args}"
+
+[tool.setuptools.package-data]
+"d2_sync_report.data.repositories.resources" = ["*.json", "*.sql"]

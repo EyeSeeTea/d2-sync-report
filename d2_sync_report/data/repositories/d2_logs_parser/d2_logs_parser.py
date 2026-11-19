@@ -46,7 +46,7 @@ class D2LogsParser:
             for log_file in log_files:
                 yield from self._get_log_entries(log_file, since)
 
-        (items, last_processed) = self._get_log_report_items(get_log_entries())
+        items, last_processed = self._get_log_report_items(get_log_entries())
 
         self.d2_logs_suggestions.copy_resources()
 
@@ -61,7 +61,7 @@ class D2LogsParser:
         for item in items:
             suggestions = [
                 suggestion
-                for error in item.errors
+                for error in item.errors + item.warnings
                 for suggestion in self.d2_logs_suggestions.get_suggestions_from_error(error)
             ]
 

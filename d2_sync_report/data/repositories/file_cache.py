@@ -3,7 +3,6 @@ from typing import Generic, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
-
 Props = TypeVar("Props", bound=BaseModel)
 
 

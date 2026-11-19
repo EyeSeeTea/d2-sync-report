@@ -70,8 +70,9 @@ class D2LogsSuggestions:
         for _literal_text, field_name, _format_spec, _conversion in Formatter().parse(template):
             if field_name:
                 # Replace friendly placeholder {var} with regex group (?P<var>)
+                # Values are IDs, codes or usernames (that may also contain "-" and "@")
                 escaped = escaped.replace(
-                    re.escape(f"{{{field_name}}}"), f"(?P<{field_name}>[\\w.]+)"
+                    re.escape(f"{{{field_name}}}"), f"(?P<{field_name}>[\\w.@-]+)"
                 )
         return re.compile(escaped)
 

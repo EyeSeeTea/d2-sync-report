@@ -1,0 +1,40 @@
+* INFO  2026-10-21T11:12:14,985 Scheduler initiated execution of job: JobConfiguration{uid='RgNenLd2Lfn', name='sync', jobType=META_DATA_SYNC, cronExpression='0 0 0 ? * *', delay='null', jobParameters=org.hisp.dhis.scheduling.parameters.MetadataSyncJobParameters@30879b88, enabled=true, inMemoryJob=false, lastRuntimeExecution='null', userUid='null', leaderOnlyJob=false, jobStatus=SCHEDULED, nextExecutionTime=null, lastExecutedStatus=FAILED, lastExecuted=null} (DefaultSchedulingManager.java [http-nio-80-exec-4])
+* INFO  2026-10-21T11:12:15,010 Metadata Sync cron Job started (MetadataSyncJob.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:15,010 Checking for an open Hibernate session (DbmsUtils.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:15,027 Now trying. Current count: 1 (MetadataRetryContext.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:15,029 [META_DATA_SYNC RgNenLd2Lfn] Process started: Setting up metadata synchronisation (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:15,031 [META_DATA_SYNC RgNenLd2Lfn] Stage completed after 0s (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:15,031 [META_DATA_SYNC RgNenLd2Lfn] Process completed after 0.002s: Finished setting up metadata synchronisation (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:15,694 [META_DATA_SYNC RgNenLd2Lfn] Stage started: Synchronizing metadata for version Version_4 BEST_EFFORT  (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:15,773 Remote server metadata version  URL: http://192.168.128.1:7000/api/metadata/version/Version_4/data.gz, username: system (MetadataVersionDelegate.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:42,097 [META_DATA_SYNC RgNenLd2Lfn] Stage completed after 26.403s: WARNING (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:12:42,098 Import completed. Import Status: WARNING (MetadataSyncPostProcessor.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:12,260 Now trying. Current count: 2 (MetadataRetryContext.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:12,263 [META_DATA_SYNC RgNenLd2Lfn] Process started: Setting up metadata synchronisation (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:12,730 [META_DATA_SYNC RgNenLd2Lfn] Stage completed after 0.166s: Remote system is at version: Version_15 (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:12,730 [META_DATA_SYNC RgNenLd2Lfn] Process started: Synchronize metadata (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:12,731 [META_DATA_SYNC RgNenLd2Lfn] Stage started: Synchronizing metadata for version Version_5 BEST_EFFORT  (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:13,992 [META_DATA_SYNC RgNenLd2Lfn] Stage completed after 1.261s: OK (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:13,999 [META_DATA_SYNC RgNenLd2Lfn] Stage started: Synchronizing metadata for version Version_6 BEST_EFFORT  (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:14,245 [META_DATA_SYNC RgNenLd2Lfn] Stage completed after 0.246s: OK (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:14,247 [META_DATA_SYNC RgNenLd2Lfn] Stage started: Synchronizing metadata for version Version_7 BEST_EFFORT  (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:14,562 (system) Creating 1 object(s) of type ApiToken (DefaultObjectBundleService.java [taskScheduler-9])
+* ERROR 2026-10-21T11:13:14,567 Exception occurred while trying to import the metadata. not-null property references a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key (MetadataSyncImportHandler.java [taskScheduler-9])
+org.hibernate.PropertyValueException: not-null property references a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key
+	at org.hibernate.engine.internal.Nullability.checkNullability(Nullability.java:111)
+	at org.hibernate.engine.internal.Nullability.checkNullability(Nullability.java:55)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+* WARN  2026-10-21T11:13:14,569 [META_DATA_SYNC RgNenLd2Lfn] Process aborted after 58.879s: aborted after error: Exception occurred while trying to import the metadata. not-null property references a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key (ControlledJobProgress.java [taskScheduler-9])
+* ERROR 2026-10-21T11:13:14,569 [META_DATA_SYNC RgNenLd2Lfn] Stage failed after 0.322s: Exception occurred while trying to import the metadata. not-null property references a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key (ControlledJobProgress.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:44,570 Now trying. Current count: 3 (MetadataRetryContext.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:44,572 Metadata Sync failed! Sending mail to Admin (MetadataSyncJob.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:44,582 Failure mail will be sent with the following message: Following Exceptions were encountered while the scheduler run for metadata sync
+
+ERROR_CATEGORY : metadataSync
+ ERROR_VALUE : Exception occurred while trying to import the metadata. not-null property references a null or transient value : org.hisp.dhis.security.apikey.ApiToken.key
+
+ERROR_CATEGORY : version
+ ERROR_VALUE : MetadataVersion{importDate=null, type=BEST_EFFORT, name='Version_7', hashCode='058952987552583a2d9554b68d841a2b'}
+
+null (MetadataSyncPostProcessor.java [taskScheduler-9])
+* INFO  2026-10-21T11:13:44,582 Closing Hibernate session (DbmsUtils.java [taskScheduler-9])

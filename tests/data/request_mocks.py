@@ -1,6 +1,5 @@
 from tests.data.d2_api_mock import MockRequest
 
-
 request_mocks = [
     ## Metadata
     MockRequest(
@@ -36,6 +35,12 @@ request_mocks = [
         path="/api/organisationUnits",
         params=[("fields", "id,name"), ("filter", "id:eq:WA5iEXjqCnS")],
         response={"organisationUnits": [{"id": "WA5iEXjqCnS", "name": "Mock Organisation Unit"}]},
+    ),
+    MockRequest(
+        method="GET",
+        path="/api/users",
+        params=[("fields", "id,name"), ("filter", "id:eq:xE7jOejl9FI")],
+        response={"users": [{"id": "xE7jOejl9FI", "name": "John Traore"}]},
     ),
     MockRequest(
         method="GET",
